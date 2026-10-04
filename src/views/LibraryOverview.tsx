@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Plus, Settings, Trash2, HardDrive, Sparkles } from 'lucide-react';
 import { corpusService } from '../services/corpusService';
 import { checkStorageCapacity } from '../utils/storageQuota';
@@ -19,12 +19,22 @@ export const LibraryOverview: React.FC<LibraryOverviewProps> = ({
   const [showArchived, setShowArchived] = useState(false);
   const [storageInfo, setStorageInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const loadData = async () => {
     setLoading(true);
     const list = await corpusService.listArticles(showArchived);
+    if (!isMountedRef.current) return;
     setArticles(list);
     const cap = await checkStorageCapacity();
+    if (!isMountedRef.current) return;
     setStorageInfo(`${(cap.usageBytes / (1024 * 1024)).toFixed(1)} MB / ${(cap.quotaBytes / (1024 * 1024 * 1024)).toFixed(1)} GB`);
     setLoading(false);
   };

@@ -17,10 +17,20 @@ describe('SettingsHub View (TDD)', () => {
     expect(screen.getByText('Mechanical Click Sound Feedback')).toBeDefined();
   });
 
-  it('saves Anthropic API key and proxy endpoint', async () => {
+  it('renders and saves Translation configuration in exact order: Base URL, Model Name, API Key', async () => {
     render(<SettingsHub onBack={vi.fn()} />);
 
-    const keyInput = (await screen.findByLabelText(/Anthropic API Key/i)) as HTMLInputElement;
+    // Verify labels exist
+    const urlInput = (await screen.findByLabelText(/Anthropic-compatible Base URL/i)) as HTMLInputElement;
+    const modelInput = (await screen.findByLabelText(/Model Name/i)) as HTMLInputElement;
+    const keyInput = (await screen.findByLabelText(/^API Key/i)) as HTMLInputElement;
+
+    // Verify DOM order: URL precedes Model, Model precedes Key
+    expect(urlInput.compareDocumentPosition(modelInput) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(modelInput.compareDocumentPosition(keyInput) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    fireEvent.change(urlInput, { target: { value: 'https://custom-proxy.internal/v1' } });
+    fireEvent.change(modelInput, { target: { value: 'claude-3-7-sonnet' } });
     fireEvent.change(keyInput, { target: { value: 'sk-ant-test-key' } });
 
     const saveBtn = screen.getByRole('button', { name: 'Save Translation Settings' });
@@ -28,6 +38,8 @@ describe('SettingsHub View (TDD)', () => {
 
     await waitFor(async () => {
       const saved = await settingsService.getSettings();
+      expect(saved.translation.baseUrl).toBe('https://custom-proxy.internal/v1');
+      expect(saved.translation.model).toBe('claude-3-7-sonnet');
       expect(saved.translation.apiKey).toBe('sk-ant-test-key');
     });
   });

@@ -132,8 +132,46 @@ export const SettingsHub: React.FC<SettingsHubProps> = ({ onBack }) => {
         </div>
         <div className="space-y-3">
           <div>
+            <label htmlFor="ant-base-url" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              Anthropic-compatible Base URL
+            </label>
+            <input
+              id="ant-base-url"
+              type="url"
+              value={settings.translation.baseUrl}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  translation: { ...settings.translation, baseUrl: e.target.value },
+                })
+              }
+              placeholder="https://api.anthropic.com/v1"
+              className="w-full text-sm font-mono p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="ant-model" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              Model Name
+            </label>
+            <input
+              id="ant-model"
+              type="text"
+              value={settings.translation.model}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  translation: { ...settings.translation, model: e.target.value },
+                })
+              }
+              placeholder="claude-3-5-sonnet-20241022"
+              className="w-full text-sm font-mono p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+            />
+          </div>
+
+          <div>
             <label htmlFor="ant-key" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              Anthropic API Key
+              API Key
             </label>
             <input
               id="ant-key"
@@ -146,25 +184,6 @@ export const SettingsHub: React.FC<SettingsHubProps> = ({ onBack }) => {
                 })
               }
               placeholder="sk-ant-..."
-              className="w-full text-sm font-mono p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="ant-proxy" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              API Endpoint / Proxy URL
-            </label>
-            <input
-              id="ant-proxy"
-              type="url"
-              value={settings.translation.baseUrl}
-              onChange={(e) =>
-                setSettings({
-                  ...settings,
-                  translation: { ...settings.translation, baseUrl: e.target.value },
-                })
-              }
-              placeholder="https://api.anthropic.com/v1"
               className="w-full text-sm font-mono p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
             />
           </div>
