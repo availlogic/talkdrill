@@ -30,6 +30,8 @@ describe('urlHelper (TDD)', () => {
       expect(getAnthropicMessagesEndpoint('/api/proxy/anthropic')).toBe('/api/proxy/anthropic');
       expect(getAnthropicMessagesEndpoint('/api/proxy/anthropic/')).toBe('/api/proxy/anthropic');
       expect(getAnthropicMessagesEndpoint('/api/proxy/anthropic/messages')).toBe('/api/proxy/anthropic/messages');
+      expect(getAnthropicMessagesEndpoint('/proxy/v1')).toBe('/proxy/v1/messages');
+      expect(getAnthropicMessagesEndpoint('https://api.anthropic.com///')).toBe('https://api.anthropic.com/v1/messages');
     });
 
     it('falls back to official Anthropic v1/messages when empty or undefined', () => {

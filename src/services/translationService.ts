@@ -8,6 +8,7 @@ export interface TranslateRequest {
   baseUrl?: string | undefined;
   model?: string | undefined;
   customPrompt?: string | undefined;
+  useProxy?: boolean | undefined;
 }
 
 export interface TranslateResponse {
@@ -35,13 +36,37 @@ export class TranslationService implements ITranslationService {
     return DEFAULT_PROMPTS[targetLang] || 'You are an expert native translator. Translate the text into natural daily spoken foreign language. Output ONLY the translated spoken text.';
   }
 
+  resolveFetchConfig(request: TranslateRequest, key: string): { url: string; headers: Record<string, string> } {
+    const rawEndpoint = getAnthropicMessagesEndpoint(request.baseUrl);
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'x-api-key': key,
+    };
+
+    if (request.useProxy || rawEndpoint.startsWith('/api/proxy')) {
+      const proxyUrl = rawEndpoint.startsWith('/api/proxy') ? rawEndpoint : '/api/proxy/anthropic';
+      if (!rawEndpoint.startsWith('/api/proxy')) {
+        headers['x-target-endpoint'] = rawEndpoint;
+      }
+      if (rawEndpoint.includes('api.anthropic.com')) {
+        headers['anthropic-version'] = '2023-06-01';
+      }
+      return { url: proxyUrl, headers };
+    }
+
+    if (rawEndpoint.includes('api.anthropic.com')) {
+      headers['anthropic-version'] = '2023-06-01';
+    }
+    return { url: rawEndpoint, headers };
+  }
+
   async translate(request: TranslateRequest): Promise<TranslateResponse> {
     const key = (request.apiKey ?? '').trim();
     if (!key) {
       throw new Error('Translation API Key is missing. Please configure it in Settings.');
     }
 
-    const endpoint = getAnthropicMessagesEndpoint(request.baseUrl);
+    const { url, headers } = this.resolveFetchConfig(request, key);
     const model = request.model || 'claude-3-5-sonnet-20241022';
     const systemPrompt = this.buildSpokenPrompt(request.targetLang, request.customPrompt);
 
@@ -52,13 +77,9 @@ export class TranslationService implements ITranslationService {
       messages: [{ role: 'user', content: request.sourceText }],
     };
 
-    const res = await fetch(endpoint, {
+    const res = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01',
-      },
+      headers,
       body: JSON.stringify(payload),
     });
 

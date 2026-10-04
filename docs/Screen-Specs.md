@@ -196,10 +196,11 @@
 ### 6.2 Layout & Hierarchy
 - 垂直 Tab 分组或卡片分组：
   1. **外观与主题偏好 (Appearance & Theme)**：主题单选按钮组（System Default / Light Mode / Dark Mode），通过 class 类名机制联动全局画布与前景对比度，确保全站达成 WCAG AAA 级高对比可读性。
-  2. **场景翻译配置 (Translation Engine)**：严格按照如下顺序提供三大配置项：
-     - **Anthropic-compatible Base URL**：端点地址输入框（默认 `https://api.anthropic.com/v1`，支持自定义兼容代理）。
+  2. **场景翻译配置 (Translation Engine)**：严格按照如下顺序提供三大核心配置项与同源代理选项：
+     - **Anthropic-compatible Base URL**：端点地址输入框（默认 `https://api.anthropic.com/v1`，支持自定义兼容端点或同源 `/api/proxy/anthropic`）。
      - **Model Name**：模型名称输入框（默认 `claude-3-5-sonnet-20241022`）。
      - **API Key**：凭据密钥密码输入框（占位符 `sk-ant-...`，掩码保护）。
+     - **同源代理开关 (Route through Cloudflare Same-Origin Proxy)**：勾选后请求走同源 `/api/proxy/anthropic` 边缘服务，彻底规避第三方服务引起的浏览器 CORS 预检阻断问题（对齐 relocate_wise 方案）。
   3. **语音合成配置 (TTS Engine)**：供应商下拉单选（`openai` / `elevenlabs` / `minimaxi` / `custom`）、Base URL、API Key 密码输入框、Voice ID / Model 输入框。
   4. **数据存储与危险区 (Data & Danger Zone)**：持久化存储申请状态、存储占用百分比、导出整库 JSON 备份按钮、红色警告框“清空全部本地数据”。
 

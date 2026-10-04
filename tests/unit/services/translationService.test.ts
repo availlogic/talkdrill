@@ -61,6 +61,48 @@ describe('TranslationService (TDD)', () => {
     expect(res.outputTokens).toBe(8);
   });
 
+  it('trims whitespace and handles missing model and missing usage fields gracefully', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        content: [{ type: 'text', text: '   ¡Hola!   ' }],
+      }),
+    });
+    globalThis.fetch = mockFetch;
+
+    const res = await service.translate({
+      sourceText: 'Hello',
+      sourceLang: 'en',
+      targetLang: 'es-ES',
+      apiKey: 'test-key',
+      model: 'my-custom-fallback-model',
+    });
+
+    expect(res.translatedText).toBe('¡Hola!');
+    expect(res.modelUsed).toBe('my-custom-fallback-model');
+    expect(res.inputTokens).toBe(0);
+    expect(res.outputTokens).toBe(0);
+  });
+
+  it('handles empty content or empty text gracefully', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        content: [],
+      }),
+    });
+    globalThis.fetch = mockFetch;
+
+    const res = await service.translate({
+      sourceText: 'Hello',
+      sourceLang: 'en',
+      targetLang: 'es-ES',
+      apiKey: 'test-key',
+    });
+
+    expect(res.translatedText).toBe('');
+  });
+
   it('throws error when translation API returns not ok', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: false,
@@ -99,7 +141,132 @@ describe('TranslationService (TDD)', () => {
 
     expect(mockFetch).toHaveBeenCalledWith(
       'https://api.minimaxi.com/anthropic/v1/messages',
-      expect.objectContaining({ method: 'POST' })
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.not.objectContaining({ 'anthropic-version': expect.anything() }),
+      })
+    );
+  });
+
+  it('includes anthropic-version header when targeting official Anthropic endpoint', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        content: [{ type: 'text', text: 'Anthropic Hello' }],
+        model: 'claude-3-5-sonnet-20241022',
+      }),
+    });
+    globalThis.fetch = mockFetch;
+
+    await service.translate({
+      sourceText: 'Hello',
+      sourceLang: 'en',
+      targetLang: 'es-ES',
+      apiKey: 'sk-ant-test',
+      baseUrl: 'https://api.anthropic.com/v1',
+    });
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://api.anthropic.com/v1/messages',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          'anthropic-version': '2023-06-01',
+          'x-api-key': 'sk-ant-test',
+        }),
+      })
+    );
+  });
+
+  it('routes request through same-origin /api/proxy/anthropic with x-target-endpoint when useProxy is true', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        content: [{ type: 'text', text: 'Proxied Hello' }],
+        model: 'MiniMax-M3',
+      }),
+    });
+    globalThis.fetch = mockFetch;
+
+    await service.translate({
+      sourceText: 'Hello',
+      sourceLang: 'en',
+      targetLang: 'es-ES',
+      apiKey: 'minimax-key',
+      baseUrl: 'https://api.minimax.cn/anthropic/v1/messages',
+      model: 'MiniMax-M3',
+      useProxy: true,
+    });
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/api/proxy/anthropic',
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({
+          'x-api-key': 'minimax-key',
+          'x-target-endpoint': 'https://api.minimax.cn/anthropic/v1/messages',
+        }),
+      })
+    );
+  });
+
+  it('routes request directly to /api/proxy/anthropic when baseUrl is already set to proxy path', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        content: [{ type: 'text', text: 'Direct Proxy Hello' }],
+        model: 'claude-3-5-sonnet-20241022',
+      }),
+    });
+    globalThis.fetch = mockFetch;
+
+    await service.translate({
+      sourceText: 'Hello',
+      sourceLang: 'en',
+      targetLang: 'es-ES',
+      apiKey: 'any-key',
+      baseUrl: '/api/proxy/anthropic',
+    });
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/api/proxy/anthropic',
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({
+          'x-api-key': 'any-key',
+        }),
+      })
+    );
+  });
+
+  it('includes anthropic-version header when routing official Anthropic through proxy', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        content: [{ type: 'text', text: 'Proxied Anthropic Hello' }],
+        model: 'claude-3-5-sonnet-20241022',
+      }),
+    });
+    globalThis.fetch = mockFetch;
+
+    await service.translate({
+      sourceText: 'Hello',
+      sourceLang: 'en',
+      targetLang: 'es-ES',
+      apiKey: 'sk-ant-test',
+      baseUrl: 'https://api.anthropic.com/v1',
+      useProxy: true,
+    });
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/api/proxy/anthropic',
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({
+          'x-api-key': 'sk-ant-test',
+          'x-target-endpoint': 'https://api.anthropic.com/v1/messages',
+          'anthropic-version': '2023-06-01',
+        }),
+      })
     );
   });
 });

@@ -51,6 +51,7 @@ export interface AppSettings {
     apiKey: string;
     model: string;
     customPrompt?: string | undefined;
+    useProxy?: boolean | undefined;
   };
   tts: {
     provider: 'openai' | 'elevenlabs' | 'minimax' | 'minimaxi' | 'custom';

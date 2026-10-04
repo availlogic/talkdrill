@@ -180,6 +180,27 @@ export const SettingsHub: React.FC<SettingsHubProps> = ({ onBack }) => {
               className="w-full text-sm font-mono p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
             />
           </div>
+
+          <div className="pt-1">
+            <label htmlFor="ant-use-proxy" className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <input
+                id="ant-use-proxy"
+                type="checkbox"
+                checked={settings.translation.useProxy ?? false}
+                onChange={(e) =>
+                  setSettings({
+                    ...settings,
+                    translation: { ...settings.translation, useProxy: e.target.checked },
+                  })
+                }
+                className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span>Route through Cloudflare Same-Origin Proxy (/api/proxy/anthropic)</span>
+            </label>
+            <p className="mt-0.5 ml-6 text-[11px] text-slate-500 dark:text-slate-400">
+              Eliminates browser CORS preflight restrictions when deploying on Cloudflare Pages.
+            </p>
+          </div>
         </div>
 
         <div className="flex justify-end pt-2">

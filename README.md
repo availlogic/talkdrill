@@ -158,12 +158,12 @@ npx wrangler pages deploy dist --project-name talkdrill
 
 或者在 Cloudflare Dashboard 中连接 GitHub 仓库，设置构建命令为 `npm run build`，输出目录为 `dist`，提交代码即可自动化部署全球 Anycast 边缘网络。
 
-### LLM 兼容服务配置说明
-系统通过 `getAnthropicMessagesEndpoint()` 自动识别并归一化各类 Anthropic 兼容端点：
-- **官方 Anthropic**：直接输入 `https://api.anthropic.com/v1`
-- **MiniMax 等兼容服务**：支持输入完整路径如 `https://api.minimaxi.com/anthropic/v1/messages`
+### LLM 兼容服务与同源代理配置说明
+系统通过 `getAnthropicMessagesEndpoint()` 与 `TranslationService` 自动识别并归一化各类 Anthropic 兼容端点：
+- **官方 Anthropic**：直接输入 `https://api.anthropic.com/v1`（建议勾选同源代理）
+- **MiniMax 等兼容服务**：输入完整服务路径如 `https://api.minimax.cn/anthropic/v1/messages` 或 `https://api.minimaxi.com/anthropic/v1/messages`
 - **OpenRouter 等网关**：支持输入 `https://openrouter.ai/api/v1`
-- **同域边缘代理**：如果第三方服务限制浏览器 CORS，Base URL 填入同源相对路径 `/api/proxy/anthropic`
+- **Cloudflare Pages 同源代理 (推荐)**：在设置页中勾选 "Route through Cloudflare Same-Origin Proxy"，请求将通过同源 `/api/proxy/anthropic` 由边缘节点向目标大模型发起服务端请求（对齐 relocate_wise 方案），彻底消除浏览器跨域 CORS 预检报错（如 MiniMax 对 `anthropic-version` 请求头的拦截限制）。亦可直接将 Base URL 配置为 `/api/proxy/anthropic`。
 
 ---
 

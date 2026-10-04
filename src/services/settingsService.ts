@@ -8,6 +8,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     baseUrl: 'https://api.anthropic.com/v1',
     apiKey: '',
     model: 'claude-3-5-sonnet-20241022',
+    useProxy: false,
   },
   tts: {
     provider: 'openai',

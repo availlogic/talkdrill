@@ -68,6 +68,34 @@ describe('Cloudflare Pages Functions Proxy (TDD)', () => {
       expect(res.status).toBe(200);
       expect(mockFetch).toHaveBeenCalledWith(
         'https://api.minimaxi.com/anthropic/v1/messages',
+        expect.objectContaining({
+          headers: expect.not.objectContaining({ 'anthropic-version': expect.anything() }),
+        })
+      );
+    });
+
+    it('reads target URL from query parameter if x-target-endpoint header is absent', async () => {
+      const mockFetch = vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ content: [{ type: 'text', text: 'Query Param Hello' }] }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+      globalThis.fetch = mockFetch;
+
+      const req = new Request('https://talkdrill.pages.dev/api/proxy/anthropic?target=https%3A%2F%2Fapi.minimax.cn%2Fanthropic%2Fv1%2Fmessages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': 'minimax-key',
+        },
+        body: JSON.stringify({ model: 'MiniMax-Text-01', messages: [] }),
+      });
+
+      const res = await onAnthropicPost({ request: req });
+      expect(res.status).toBe(200);
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://api.minimax.cn/anthropic/v1/messages',
         expect.anything()
       );
     });

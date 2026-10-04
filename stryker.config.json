@@ -4,11 +4,14 @@
   "testRunner": "vitest",
   "reporters": ["progress", "clear-text", "html"],
   "coverageAnalysis": "perTest",
+  "concurrency": 2,
   "mutate": [
     "src/utils/zhengMath.ts",
     "src/services/drillCounterService.ts",
     "src/services/corpusService.ts",
-    "src/utils/themeManager.ts"
+    "src/utils/themeManager.ts",
+    "src/services/translationService.ts",
+    "src/utils/urlHelper.ts"
   ],
   "thresholds": {
     "high": 90,
