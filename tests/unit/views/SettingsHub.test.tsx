@@ -50,17 +50,17 @@ describe('SettingsHub View (TDD)', () => {
 
     const proxyCheckbox = (await screen.findByLabelText(/Route through Cloudflare Same-Origin Proxy/i)) as HTMLInputElement;
     expect(proxyCheckbox).toBeDefined();
-    expect(proxyCheckbox.checked).toBe(false);
+    expect(proxyCheckbox.checked).toBe(true);
 
     fireEvent.click(proxyCheckbox);
-    expect(proxyCheckbox.checked).toBe(true);
+    expect(proxyCheckbox.checked).toBe(false);
 
     const saveBtn = screen.getByRole('button', { name: 'Save Translation Settings' });
     fireEvent.click(saveBtn);
 
     await waitFor(async () => {
       const saved = await settingsService.getSettings();
-      expect(saved.translation.useProxy).toBe(true);
+      expect(saved.translation.useProxy).toBe(false);
     });
   });
 
