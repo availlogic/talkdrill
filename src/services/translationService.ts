@@ -43,7 +43,10 @@ export class TranslationService implements ITranslationService {
       'x-api-key': key,
     };
 
-    if (request.useProxy || rawEndpoint.startsWith('/api/proxy')) {
+    const isExternalUrl = rawEndpoint.startsWith('http://') || rawEndpoint.startsWith('https://');
+    const shouldUseProxy = request.useProxy !== false;
+
+    if (rawEndpoint.startsWith('/api/proxy') || (shouldUseProxy && isExternalUrl)) {
       const proxyUrl = rawEndpoint.startsWith('/api/proxy') ? rawEndpoint : '/api/proxy/anthropic';
       if (!rawEndpoint.startsWith('/api/proxy')) {
         headers['x-target-endpoint'] = rawEndpoint;

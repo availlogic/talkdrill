@@ -137,6 +137,7 @@ describe('TranslationService (TDD)', () => {
       apiKey: 'test-key',
       baseUrl: 'https://api.minimaxi.com/anthropic/v1/messages',
       model: 'MiniMax-M3',
+      useProxy: false,
     });
 
     expect(mockFetch).toHaveBeenCalledWith(
@@ -148,7 +149,7 @@ describe('TranslationService (TDD)', () => {
     );
   });
 
-  it('includes anthropic-version header when targeting official Anthropic endpoint', async () => {
+  it('includes anthropic-version header when targeting official Anthropic endpoint directly with useProxy: false', async () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
@@ -164,6 +165,7 @@ describe('TranslationService (TDD)', () => {
       targetLang: 'es-ES',
       apiKey: 'sk-ant-test',
       baseUrl: 'https://api.anthropic.com/v1',
+      useProxy: false,
     });
 
     expect(mockFetch).toHaveBeenCalledWith(
@@ -172,6 +174,37 @@ describe('TranslationService (TDD)', () => {
         headers: expect.objectContaining({
           'anthropic-version': '2023-06-01',
           'x-api-key': 'sk-ant-test',
+        }),
+      })
+    );
+  });
+
+  it('defaults to same-origin proxy /api/proxy/anthropic when useProxy is omitted for external URL', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        content: [{ type: 'text', text: 'Auto Proxied Hello' }],
+        model: 'MiniMax-M3',
+      }),
+    });
+    globalThis.fetch = mockFetch;
+
+    await service.translate({
+      sourceText: 'Hello',
+      sourceLang: 'en',
+      targetLang: 'es-ES',
+      apiKey: 'minimax-key',
+      baseUrl: 'https://api.minimax.cn/anthropic/v1/messages',
+      model: 'MiniMax-M3',
+    });
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/api/proxy/anthropic',
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({
+          'x-api-key': 'minimax-key',
+          'x-target-endpoint': 'https://api.minimax.cn/anthropic/v1/messages',
         }),
       })
     );
