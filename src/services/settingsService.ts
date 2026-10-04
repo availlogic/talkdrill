@@ -15,9 +15,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
     apiKey: '',
     modelOrVoiceId: 'alloy',
   },
-  audioFeedback: {
-    mechanicalClick: true,
-  },
   printOptions: {
     defaultTallyBoxes: 100,
   },
@@ -35,7 +32,6 @@ export class SettingsService {
       theme: record.value.theme ?? DEFAULT_SETTINGS.theme,
       translation: { ...DEFAULT_SETTINGS.translation, ...record.value.translation },
       tts: { ...DEFAULT_SETTINGS.tts, ...record.value.tts },
-      audioFeedback: { ...DEFAULT_SETTINGS.audioFeedback, ...record.value.audioFeedback },
       printOptions: { ...DEFAULT_SETTINGS.printOptions, ...record.value.printOptions },
     };
   }
@@ -46,7 +42,6 @@ export class SettingsService {
       theme: partial.theme !== undefined ? partial.theme : current.theme,
       translation: partial.translation ? { ...current.translation, ...partial.translation } : current.translation,
       tts: partial.tts ? { ...current.tts, ...partial.tts } : current.tts,
-      audioFeedback: partial.audioFeedback ? { ...current.audioFeedback, ...partial.audioFeedback } : current.audioFeedback,
       printOptions: partial.printOptions ? { ...current.printOptions, ...partial.printOptions } : current.printOptions,
     };
 

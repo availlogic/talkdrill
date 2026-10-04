@@ -177,7 +177,7 @@
 - **Preconditions**: 在 iOS Safari 或移动端模拟器无操作初次载入页面。
 - **Steps**:
   1. 用户产生页面首次触控（轻触屏幕任意区域或点击打卡胶囊）。
-- **Expected Result**: 触控事件同步触发 `AudioContext.resume()`；内部状态从 `suspended` 转为 `running`，后续音频与机械音效能连贯自如播放。
+- **Expected Result**: 触控事件同步触发 `AudioContext.resume()`；内部状态从 `suspended` 转为 `running`，后续音频能连贯自如播放。
 - **Priority**: High
 
 ### TC-FT-PLY-004: 微步快退快进与重播快捷键
@@ -207,7 +207,7 @@
 - **Preconditions**: 移动端视口（屏幕宽度 375px），核心朗读工作台。
 - **Steps**:
   1. 单手拇指快速轻触底部高度 58px 的常驻胶囊按钮“+1 朗读完毕”。
-- **Expected Result**: 胶囊呈现轻微微缩物理反馈（active: scale 0.96）；计数递增 +1；若开启机械音，扬声器发出清脆短促咔哒声。
+- **Expected Result**: 胶囊呈现轻微微缩物理反馈（active: scale 0.96）；计数递增 +1。
 - **Priority**: Critical
 
 ### TC-FT-CNT-003: 撤销机制与 0 下限保护 (快捷键 Z)

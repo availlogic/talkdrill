@@ -185,9 +185,6 @@ export interface AppSettings {
     apiKey: string;
     modelOrVoiceId: string;
   };
-  audioFeedback: {
-    mechanicalClick: boolean;
-  };
   printOptions: {
     defaultTallyBoxes: 60 | 100;
   };
@@ -341,7 +338,6 @@ export interface IDrillCounterService {
   manualSet(articleId: string, exactCount: number): Promise<number>;
   calculateZhengStrokes(count: number): ZhengStrokeState;
   checkMilestone(previousCount: number, currentCount: number): MilestoneResult;
-  playMechanicalClick(): void;
 }
 ```
 

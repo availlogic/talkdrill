@@ -1,11 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { db } from '../../../src/storage/db';
 import { DrillCounterService } from '../../../src/services/drillCounterService';
-import { playMechanicalClick } from '../../../src/utils/audioClickSynth';
-
-vi.mock('../../../src/utils/audioClickSynth', () => ({
-  playMechanicalClick: vi.fn(),
-}));
 
 describe('DrillCounterService (TDD)', () => {
   let service: DrillCounterService;
@@ -40,11 +35,9 @@ describe('DrillCounterService (TDD)', () => {
 
     const count1 = service.increment(articleId);
     expect(count1).toBe(1);
-    expect(playMechanicalClick).toHaveBeenCalledTimes(1);
 
     const count2 = service.increment(articleId);
     expect(count2).toBe(2);
-    expect(playMechanicalClick).toHaveBeenCalledTimes(2);
 
     await service.flushPendingSaves();
 
@@ -57,13 +50,6 @@ describe('DrillCounterService (TDD)', () => {
     expect(logs[0]?.resultingCount).toBe(1);
     expect(logs[1]?.delta).toBe(1);
     expect(logs[1]?.resultingCount).toBe(2);
-  });
-
-  it('can disable mechanical click feedback', () => {
-    service.setMechanicalClick(false);
-    const count = service.increment(articleId);
-    expect(count).toBe(1);
-    expect(playMechanicalClick).not.toHaveBeenCalled();
   });
 
   it('undoes counter by 1, clamped at 0', async () => {

@@ -127,6 +127,6 @@ AI 编码智能体及开发工程师必须严格执行 RED -> GREEN -> REFACTOR 
 - **ISSUE-01 [Severity: MEDIUM] [Resolved] - 离线环境下 TTS 调用的容错与空音频处理**：
   - *现象描述*：在断网环境下，若用户尝试录入新语料并点击“在线 TTS 合成”，上游文档未明确界面是直接阻断流程还是允许以无音频方式继续练习。
   - *核验解决*：在 [docs/Functional-Test-Cases.md](file:///Users/victorxu/projects/talkdrill/docs/Functional-Test-Cases.md) 中增加显式用例 `TC-FT-AUD-005`，规定当 TTS 离线失败时，界面弹出“网络离线无法合成”并提供“以纯文本朗读模式保存”的分支，保障用户不被卡死。
-- **ISSUE-02 [Severity: LOW] [Resolved] - 移动端虚拟按键震动 API 权限限制**：
-  - *现象描述*：部分 iOS 设备 Safari 不支持或限制 `navigator.vibrate`。
-  - *核验解决*：在 [docs/Functional-Test-Cases.md](file:///Users/victorxu/projects/talkdrill/docs/Functional-Test-Cases.md) 规定打卡触觉反馈采用 Feature Detection 降级模式，优先以 Web Audio 物理微音效作为全平台一致性确认信号。
+- **ISSUE-02 [Severity: LOW] [Resolved] - 移除移动端虚拟按键震动与声音反馈**：
+  - *现象描述*：产品明确无需物理震动与机械咔哒音效反馈，要求实现最纯粹无干扰的视觉打卡体验。
+  - *核验解决*：在 [docs/Functional-Test-Cases.md](file:///Users/victorxu/projects/talkdrill/docs/Functional-Test-Cases.md) 规定打卡采用纯视觉响应（胶囊微缩放与正字实时渲染），彻底移除震动 API 与 Web Audio 机械声效，避免多平台兼容性与音频打扰。

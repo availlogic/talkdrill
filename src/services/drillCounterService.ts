@@ -1,18 +1,12 @@
 import { db } from '../storage/db';
 import { type ZhengStrokeState, type MilestoneResult } from '../types/models';
 import { calculateZhengStrokes, checkMilestone } from '../utils/zhengMath';
-import { playMechanicalClick } from '../utils/audioClickSynth';
 
 export class DrillCounterService {
   private memoryCounts = new Map<string, number>();
   private saveTimers = new Map<string, NodeJS.Timeout>();
   private pendingLogs = new Map<string, Array<{ delta: number; count: number; timestamp: number }>>();
   private milestoneListeners = new Set<(res: MilestoneResult) => void>();
-  private enableMechanicalClick = true;
-
-  setMechanicalClick(enabled: boolean): void {
-    this.enableMechanicalClick = enabled;
-  }
 
   async loadArticle(articleId: string): Promise<number> {
     const article = await db.articles.get(articleId);
@@ -29,10 +23,6 @@ export class DrillCounterService {
     const prev = this.getCount(articleId);
     const next = prev + 1;
     this.memoryCounts.set(articleId, next);
-
-    if (this.enableMechanicalClick) {
-      playMechanicalClick();
-    }
 
     this.checkAndNotifyMilestone(prev, next);
     this.recordDelta(articleId, 1, next);

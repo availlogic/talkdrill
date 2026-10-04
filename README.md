@@ -36,7 +36,6 @@ TalkDrill 专为高频肌肉记忆特训而生：
          │
 [Core Utils & Storage]
   ├── zhengMath (纯函数正字笔画计算与阶段里程碑判定：50/150/300/500 遍)
-  ├── audioClickSynth (Web Audio API 合成机械打字机清脆打卡音效)
   ├── audioContextManager (用户手势即时解锁浏览器 AudioContext)
   ├── storageQuota (StorageManager API 存储配额与持久化检查)
   └── Dexie IndexedDB (talkdrill_db: articles, audios, drillLogs, settings)
@@ -162,7 +161,7 @@ npx wrangler deploy
 
 ### 桌面端键盘盲操流程
 1. 进入练习界面后，按下键盘 `Space`（空格键）或点击 "Drill +1" 按钮进行快速跟读打卡（+1）。
-2. 每打卡 1 次，界面发出清脆机械打字机音效，正字画数实时更新。
+2. 每打卡 1 次，正字画数实时更新。
 3. 每满 5 划自动结成 1 个完整“正”字。
 4. 如需回退误触，按下键盘 `Z` 键或点击 "Undo last count" 执行撤销（-1）。
 5. 按下键盘 `R` 键即可将参考音频快退至当前 A-B 复读起点重新朗读。

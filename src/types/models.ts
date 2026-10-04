@@ -58,9 +58,6 @@ export interface AppSettings {
     apiKey: string;
     modelOrVoiceId: string;
   };
-  audioFeedback: {
-    mechanicalClick: boolean;
-  };
   printOptions: {
     defaultTallyBoxes: 60 | 100;
   };

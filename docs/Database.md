@@ -322,9 +322,6 @@ export async function requestPersistentStorage(): Promise<boolean> {
     }
   ],
   "settings": {
-    "audioFeedback": {
-      "mechanicalClick": true
-    },
     "printOptions": {
       "defaultTallyBoxes": 100
     }

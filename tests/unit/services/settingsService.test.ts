@@ -19,7 +19,6 @@ describe('SettingsService (TDD)', () => {
     expect(settings.translation.enabled).toBe(true);
     expect(settings.translation.baseUrl).toBe('https://api.anthropic.com/v1');
     expect(settings.tts.provider).toBe('openai');
-    expect(settings.audioFeedback.mechanicalClick).toBe(true);
     expect(settings.printOptions.defaultTallyBoxes).toBe(100);
   });
 
@@ -38,9 +37,6 @@ describe('SettingsService (TDD)', () => {
         apiKey: 'xi-key',
         modelOrVoiceId: 'voice-1',
       },
-      audioFeedback: {
-        mechanicalClick: false,
-      },
       printOptions: {
         defaultTallyBoxes: 60,
       },
@@ -51,7 +47,6 @@ describe('SettingsService (TDD)', () => {
     expect(current.translation.apiKey).toBe('sk-ant-custom');
     expect(current.translation.baseUrl).toBe('https://my-proxy.workers.dev');
     expect(current.tts.provider).toBe('elevenlabs');
-    expect(current.audioFeedback.mechanicalClick).toBe(false);
     expect(current.printOptions.defaultTallyBoxes).toBe(60);
   });
 

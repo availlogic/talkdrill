@@ -9,12 +9,13 @@ describe('SettingsHub View (TDD)', () => {
     await db.settings.clear();
   });
 
-  it('renders decoupled Translation and TTS BYOK forms', async () => {
+  it('renders decoupled Translation and TTS BYOK forms without mechanical click or sound feedback', async () => {
     render(<SettingsHub onBack={vi.fn()} />);
 
     expect(await screen.findByText('Translation Engine (BYOK)')).toBeDefined();
     expect(screen.getByText('Text-to-Speech (TTS) Configuration')).toBeDefined();
-    expect(screen.getByText('Mechanical Click Sound Feedback')).toBeDefined();
+    expect(screen.queryByText('Mechanical Click Sound Feedback')).toBeNull();
+    expect(screen.queryByText('Drill Preferences')).toBeNull();
   });
 
   it('renders and saves Translation configuration in exact order: Base URL, Model Name, API Key', async () => {
@@ -41,18 +42,6 @@ describe('SettingsHub View (TDD)', () => {
       expect(saved.translation.baseUrl).toBe('https://custom-proxy.internal/v1');
       expect(saved.translation.model).toBe('claude-3-7-sonnet');
       expect(saved.translation.apiKey).toBe('sk-ant-test-key');
-    });
-  });
-
-  it('toggles mechanical click feedback', async () => {
-    render(<SettingsHub onBack={vi.fn()} />);
-
-    const toggle = (await screen.findByRole('switch', { name: /mechanical click feedback/i })) as HTMLInputElement;
-    fireEvent.click(toggle);
-
-    await waitFor(async () => {
-      const saved = await settingsService.getSettings();
-      expect(saved.audioFeedback.mechanicalClick).toBe(false);
     });
   });
 

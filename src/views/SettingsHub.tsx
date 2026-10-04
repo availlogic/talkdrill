@@ -35,16 +35,6 @@ export const SettingsHub: React.FC<SettingsHubProps> = ({ onBack }) => {
     setTimeout(() => setStatusMessage(null), 3000);
   };
 
-  const handleToggleClick = async () => {
-    const nextVal = !settings.audioFeedback.mechanicalClick;
-    const updated = {
-      ...settings,
-      audioFeedback: { ...settings.audioFeedback, mechanicalClick: nextVal },
-    };
-    setSettings(updated);
-    await settingsService.updateSettings({ audioFeedback: updated.audioFeedback });
-  };
-
   const handleSelectTheme = async (theme: 'system' | 'light' | 'dark') => {
     const updated = { ...settings, theme };
     setSettings(updated);
@@ -285,31 +275,6 @@ export const SettingsHub: React.FC<SettingsHubProps> = ({ onBack }) => {
           </button>
         </div>
       </form>
-
-      {/* Audio Feedback */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4 shadow-sm">
-        <h3 className="font-bold text-slate-900 dark:text-slate-100">Drill Preferences</h3>
-        <div className="flex items-center justify-between">
-          <div>
-            <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">Mechanical Click Sound Feedback</h4>
-            <p className="text-xs text-slate-500">Triggers synthetic 12ms physical mechanical click sound on each Space repetition</p>
-          </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={settings.audioFeedback.mechanicalClick}
-            aria-label="Mechanical click feedback"
-            onClick={handleToggleClick}
-            className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${
-              settings.audioFeedback.mechanicalClick
-                ? 'bg-blue-600 justify-end'
-                : 'bg-slate-300 dark:bg-slate-700 justify-start'
-            }`}
-          >
-            <div className="w-4 h-4 rounded-full bg-white shadow-sm" />
-          </button>
-        </div>
-      </div>
 
       {/* Danger Zone: Purge */}
       <div className="bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 rounded-2xl p-5 space-y-4">

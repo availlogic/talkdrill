@@ -151,9 +151,6 @@ flowchart TD
     
     subgraph UltraFastAction ["16ms 瞬时响应链路"]
         InstantAction[内存计数 +1 & 重绘'正'字笔画]
-        InstantAction --> SoundOpt{开启机械音?}
-        SoundOpt -->|是| PlayClick[Web Audio 发出短促清脆机械咔哒声]
-        SoundOpt -->|否| SkipSound[静音]
     end
     
     InstantAction -.->|异步防抖持久化| AsyncSave[后台写入 IndexedDB]
@@ -183,7 +180,7 @@ flowchart TD
     FixType -->|极速单次撤销| UndoAction[Desktop 按下 Z 键 或 点击撤销小按钮]
     UndoAction --> CheckZero{当前计数 > 0?}
     CheckZero -->|否| DoNothing[保持 0 并不报错]
-    CheckZero -->|是| DecrCount[计数 -1 & 擦除'正'字对应最后一笔] --> FlashUndo[轻微震动/视觉微弱反馈]
+    CheckZero -->|是| DecrCount[计数 -1 & 擦除'正'字对应最后一笔] --> FlashUndo[视觉即时微弱反馈]
     
     FixType -->|大跨度数字修正| ClickNumber[点击阿拉伯数字如 '128 / 500']
     ClickNumber --> OpenModal[弹出数字微调弹窗 (带数字键盘)]
@@ -230,7 +227,7 @@ flowchart TD
     
     ShowTabs --> ConfigTrans[配置 Anthropic Base URL, API Key, Model, 口语 Prompt]
     ShowTabs --> ConfigTTS[配置 TTS 供应商类型, Base URL, API Key, Voice ID]
-    ShowTabs --> ConfigMisc[切换机械打卡音效开关 / 默认打印方格偏好]
+    ShowTabs --> ConfigMisc[配置默认打印方格偏好]
     
     ConfigTrans --> SaveSettings[点击保存配置 -> 仅写入本地 IndexedDB]
     ConfigTTS --> SaveSettings
