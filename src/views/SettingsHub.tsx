@@ -127,7 +127,7 @@ export const SettingsHub: React.FC<SettingsHubProps> = ({ onBack }) => {
             </label>
             <input
               id="ant-base-url"
-              type="url"
+              type="text"
               value={settings.translation.baseUrl}
               onChange={(e) =>
                 setSettings({
@@ -135,9 +135,12 @@ export const SettingsHub: React.FC<SettingsHubProps> = ({ onBack }) => {
                   translation: { ...settings.translation, baseUrl: e.target.value },
                 })
               }
-              placeholder="https://api.anthropic.com/v1"
+              placeholder="https://api.anthropic.com/v1 or /api/proxy/anthropic"
               className="w-full text-sm font-mono p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
             />
+            <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+              Supports Anthropic, MiniMax, OpenRouter, custom proxy, or same-origin /api/proxy/anthropic.
+            </p>
           </div>
 
           <div>

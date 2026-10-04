@@ -8,7 +8,7 @@ TalkDrill 是一款面向外语高强度跟读与过度学习（Overlearning）�
 
 - **纯客户端离线优先 (Client-Centric & Offline-First)**：所有业务计算、语料数据、打卡计数及音频二进制资产均在浏览器沙箱内运行与持久化。除第三方 AI 模型与 TTS 服务调用外，应用不依赖任何中央业务后端。
 - **解耦式 BYOK (Bring Your Own Key)**：用户自带第三方模型凭据（Anthropic 兼容接口与多厂商 TTS 接口）。凭据仅存储在客户端本地，翻译与语音服务完全解耦独立配置。
-- **无状态边缘反代网关 (Stateless Edge Proxy)**：针对浏览器直连外部 API 面临的跨域资源共享（CORS）与流式转发限制，系统提供部署于 Cloudflare Workers 的极简无状态边缘反向代理。网关仅负责透传请求头与响应流，严禁落盘或缓存任何私有语料与密钥。
+- **无状态边缘反代网关 (Stateless Edge Proxy)**：针对浏览器直连部分外部 API 面临的跨域资源共享（CORS）限制，系统内置基于 Cloudflare Pages Functions 的同域无状态边缘代理（`functions/api/proxy/`），一站式发布，同时支持前端直连任何兼容 CORS 的第三方服务。网关仅负责透传请求头与响应流，严禁落盘或缓存任何私有语料与密钥。
 - **超低延迟响应交互**：打卡交互到界面视觉刷新延迟控制在 16ms 以内（保持 60fps 无掉帧）；本地音频装载延迟控制在 100ms 以内；首屏 Brotli 压缩包控制在 300KB 以内。
 - **双轨练习模式支持**：屏幕交互工作台（全端响应式、物理键盘盲操、大尺寸触控胶囊）与实体纸质朗读排版（`@media print` 样式、60/100 格“正”字打卡网格表）同源共生。
 
@@ -33,12 +33,9 @@ flowchart TD
         UI <--> SW
     end
 
-    subgraph Hosting ["静态资源托管"]
-        CFPages["Cloudflare Pages (全球 CDN 分发纯静态产物)"]
-    end
-
-    subgraph EdgeGateway ["边缘管道层 (Cloudflare Workers)"]
-        CFWorker["Stateless CORS Reverse Proxy"]
+    subgraph Hosting ["全栈一体化托管 (Cloudflare Pages)"]
+        CFPages["Cloudflare Pages 静态产物 (HTML/CSS/JS)"]
+        PagesFn["Pages Functions 同域边缘代理 (/api/proxy/*)"]
     end
 
     subgraph ExternalServices ["第三方服务商 (BYOK)"]
@@ -47,12 +44,12 @@ flowchart TD
     end
 
     CFPages -.->|下载静态资源| UI
-    Core -->|1. 携带客户端自持 Key 发起请求| CFWorker
-    CFWorker -->|2. 无状态中转透传| LLM
-    CFWorker -->|3. 无状态中转透传| TTS
-    LLM -.->|流式文本响应| CFWorker
-    TTS -.->|音频二进制流响应| CFWorker
-    CFWorker -.->|CORS 透传| Core
+    Core -->|1. 同域或直连无跨域发起请求| PagesFn
+    PagesFn -->|2. 无状态中转透传| LLM
+    PagesFn -->|3. 无状态中转透传| TTS
+    LLM -.->|流式文本响应| PagesFn
+    TTS -.->|音频二进制流响应| PagesFn
+    PagesFn -.->|安全透传| Core
     Core -->|4. 原生二进制 Blob 存入| StorageEng
 ```
 
@@ -307,11 +304,10 @@ graph TD
 ## 8. Deployment & CI/CD Architecture
 
 ### 8.1 部署架构
-- **静态前端产物 (Cloudflare Pages)**：
+- **全栈一体化托管 (Cloudflare Pages & Pages Functions)**：
   - 代码提交至 Git 仓库后，自动触发 Cloudflare Pages 构建（命令：`npm run build`）。
   - 构建产物（HTML、JS、CSS、Web Manifest）推送到全球 Cloudflare Anycast 边缘网络，开启 Brotli 自动压缩与 HTTP/3。
-- **边缘反代网关 (Cloudflare Workers)**：
-  - 采用标准 TypeScript 编写轻量 Worker 脚本，使用 `wrangler deploy` 独立发布，绑定用户自定义路由或免费 workers.dev 域名。
+  - `functions/` 目录随前端自动编译部署为同域 Edge Functions（`/api/proxy/*`），无需单独维护另外的独立 Worker。
 
 ---
 
@@ -324,12 +320,12 @@ graph TD
   - *优势*：存储上限达本地可用磁盘空间的 50% 以上（通常数十 GB）；避免了 Base64 编码带来的 33% 额外内存开销与 CPU 编解码延迟；具备强类型查询能力。
   - *代价*：API 为异步设计，打卡计数需采用内存状态同步刷新与异步防抖写回机制。
 
-### ADR-2: 采用无状态 Cloudflare Workers 作为反向代理而非自建全功能后端
-- **背景**：纯前端直连 Anthropic 或外部 TTS 存在浏览器 CORS 跨域限制，且需保护用户自备密钥不被集中式服务器滥用。
-- **决策**：提供极简的开源 Cloudflare Worker 脚本，仅作为无状态流式管道，用户可在 Cloudflare 免费配额下零成本一键部署。
+### ADR-2: 采用 Cloudflare Pages Functions 作为同域无状态反代而非分离部署全功能后端
+- **背景**：纯前端直连部分第三方 LLM 或 TTS API 存在浏览器 CORS 跨域限制，且需保护用户自备密钥不被集中式服务器滥用。
+- **决策**：基于 Cloudflare Pages 内置的 Pages Functions 特性（`functions/api/proxy/`），与前端静态页面同域一体化部署，提供轻量无状态中转。同时前端支持直连任何开放 CORS 的第三方兼容端点。
 - **后果**：
-  - *优势*：零服务器租赁与维护成本；遵循隐私第一原则，服务器端无状态，不存在用户数据泄露风险；开发与部署极其轻量。
-  - *代价*：初次配置需用户填入自建 Worker URL（或直连允许 CORS 的中转地址）。
+  - *优势*：零服务器租赁与维护成本；单命令一键部署；同源调用零 CORS 困扰；隐私完全自持。
+  - *代价*：要求托管平台支持 Cloudflare Pages 或兼容的 Edge Functions 环境。
 
 ### ADR-3: 音频引擎采用原生 HTML5 Audio + Web Audio 混合架构
 - **背景**：需要兼顾超低延迟、变调不变速（Pitch preservation）、微秒级 A-B 循环与极小打包体积。

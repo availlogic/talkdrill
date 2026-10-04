@@ -145,15 +145,25 @@ npx tsc --noEmit
 
 ## 7. 部署说明 (Deployment Instructions)
 
-### 纯前端静态部署
-由于 TalkDrill 为纯客户端去中心化架构，`dist/` 目录可部署至任何静态托管平台（Cloudflare Pages、Vercel、GitHub Pages、Netlify 等）。
+### Cloudflare Pages 一体化部署 (推荐生产方案)
+TalkDrill 基于纯客户端去中心化架构，并内置 Cloudflare Pages Functions 边缘网关（位于 `functions/api/proxy/`），实现“前端页面 + 边缘跨域代理”一体化一键部署：
 
-### Cloudflare Worker 反向代理 (可选 BYOK 跨域支持)
-当直接调用某些第三方 API 遇到浏览器 CORS 限制时，可部署 `proxy/worker.ts` 至 Cloudflare Workers：
 ```bash
-cd proxy
-npx wrangler deploy
+# 1. 本地安装依赖并构建生产静态包
+npm run build
+
+# 2. 一键发布至 Cloudflare Pages (自动部署 dist 静态资源与 functions 边缘函数)
+npx wrangler pages deploy dist --project-name talkdrill
 ```
+
+或者在 Cloudflare Dashboard 中连接 GitHub 仓库，设置构建命令为 `npm run build`，输出目录为 `dist`，提交代码即可自动化部署全球 Anycast 边缘网络。
+
+### LLM 兼容服务配置说明
+系统通过 `getAnthropicMessagesEndpoint()` 自动识别并归一化各类 Anthropic 兼容端点：
+- **官方 Anthropic**：直接输入 `https://api.anthropic.com/v1`
+- **MiniMax 等兼容服务**：支持输入完整路径如 `https://api.minimaxi.com/anthropic/v1/messages`
+- **OpenRouter 等网关**：支持输入 `https://openrouter.ai/api/v1`
+- **同域边缘代理**：如果第三方服务限制浏览器 CORS，Base URL 填入同源相对路径 `/api/proxy/anthropic`
 
 ---
 

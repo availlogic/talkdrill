@@ -76,4 +76,30 @@ describe('TranslationService (TDD)', () => {
       })
     ).rejects.toThrow('Translation API error: HTTP 401');
   });
+
+  it('correctly dispatches requests to third-party Anthropic-compatible endpoint without duplicating messages path', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        content: [{ type: 'text', text: 'Hola mundo' }],
+        model: 'MiniMax-M3',
+        usage: { input_tokens: 5, output_tokens: 5 },
+      }),
+    });
+    globalThis.fetch = mockFetch;
+
+    await service.translate({
+      sourceText: 'Hello world',
+      sourceLang: 'en',
+      targetLang: 'es-ES',
+      apiKey: 'test-key',
+      baseUrl: 'https://api.minimaxi.com/anthropic/v1/messages',
+      model: 'MiniMax-M3',
+    });
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://api.minimaxi.com/anthropic/v1/messages',
+      expect.objectContaining({ method: 'POST' })
+    );
+  });
 });

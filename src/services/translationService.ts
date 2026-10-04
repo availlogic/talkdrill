@@ -1,3 +1,5 @@
+import { getAnthropicMessagesEndpoint } from '../utils/urlHelper';
+
 export interface TranslateRequest {
   sourceText: string;
   sourceLang: string;
@@ -39,7 +41,7 @@ export class TranslationService implements ITranslationService {
       throw new Error('Translation API Key is missing. Please configure it in Settings.');
     }
 
-    const baseUrl = (request.baseUrl || 'https://api.anthropic.com/v1').replace(/\/+$/, '');
+    const endpoint = getAnthropicMessagesEndpoint(request.baseUrl);
     const model = request.model || 'claude-3-5-sonnet-20241022';
     const systemPrompt = this.buildSpokenPrompt(request.targetLang, request.customPrompt);
 
@@ -50,7 +52,7 @@ export class TranslationService implements ITranslationService {
       messages: [{ role: 'user', content: request.sourceText }],
     };
 
-    const res = await fetch(`${baseUrl}/messages`, {
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

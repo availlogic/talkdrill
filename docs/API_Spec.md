@@ -3,37 +3,38 @@
 ## 1. Overview & Architecture Philosophy
 
 TalkDrill 是一款去中心化、离线优先的纯客户端应用程序。其接口协议体系划分为两大核心层级：
-1. **外部通信接口 (External & Proxy APIs)**：用于处理前端与第三方 AI / TTS 服务提供商之间的网络交互，由部署在 Cloudflare Workers 上的无状态边缘反代网关统一解决跨域（CORS）与密钥透传问题。
+1. **外部通信接口 (External & Proxy APIs)**：用于处理前端与第三方 AI / TTS 服务提供商之间的网络交互，由内置于 Cloudflare Pages Functions（`/api/proxy/*`）的同域无状态边缘网关解决跨域（CORS）与密钥透传问题，同时支持直连任何第三方 Anthropic 兼容端点。
 2. **内部服务契约 (Internal TypeScript Service Contracts)**：用于组织前端模块之间的调用边界，遵循单一职责与依赖注入原则，定义高内聚、低耦合的强类型接口，杜绝任何 `any` 类型逃逸。
 
 ---
 
-## 2. External & Edge Reverse Proxy APIs (Cloudflare Workers)
+## 2. External & Edge Reverse Proxy APIs (Cloudflare Pages Functions)
 
-由于 Anthropic 及部分 TTS 供应商不直接开放针对浏览器前端源域（Origin）的跨域请求（CORS），Cloudflare Worker 作为轻量级无状态边缘管道，承担跨域中间件职责。
+针对 Anthropic 及部分 TTS 供应商对浏览器前端跨域请求（CORS）的拦截，TalkDrill 内置同域部署的 Cloudflare Pages Functions 作为轻量级无状态边缘管道。
 
 ### 2.1 基础网络配置与通用约定
 
-- **Base URL 规范**：用户自建 Worker 地址（例如 `https://talkdrill-proxy.<username>.workers.dev`）或兼容代理端点。
+- **Base URL 规范**：支持输入任意第三方 Anthropic 兼容端点（系统通过 `getAnthropicMessagesEndpoint()` 自动智能归一化路径），或直接使用同源相对路径 `/api/proxy/anthropic`。
 - **通用响应头 (CORS Headers)**：
-  - `Access-Control-Allow-Origin: *`（或用户指定的生产域名）
-  - `Access-Control-Allow-Methods: POST, OPTIONS`
+  - `Access-Control-Allow-Origin: *`
+  - `Access-Control-Allow-Methods: GET, POST, OPTIONS`
   - `Access-Control-Allow-Headers: Content-Type, Authorization, x-api-key, anthropic-version, x-target-endpoint`
-- **无状态保障**：Worker 不含任何缓存中间件或数据库连接，仅负责 Request/Response Stream 双向透传。
+- **无状态保障**：函数严禁缓存或持久化任何凭据与文本，纯粹负责 Request/Response Stream 双向透传。
 
 ---
 
 ### 2.2 接口详情: Anthropic 口语翻译代理
 
 - **端点路径**：`POST /api/proxy/anthropic`
-- **协议说明**：接收客户端组装好的 messages 格式负载，直接代理转发至 Anthropic API 官方端点 `https://api.anthropic.com/v1/messages`。
+- **协议说明**：接收客户端组装好的 messages 负载，默认转发至 Anthropic 官方端点 `https://api.anthropic.com/v1/messages`；若传入 `x-target-endpoint` 则动态转发至指定的第三方 Anthropic 兼容服务端点。
 
 #### 请求头 (Request Headers)
 | 请求头键名 | 类型 | 必填 | 描述 |
 |---|---|---|---|
 | `Content-Type` | string | 是 | 固定为 `application/json` |
-| `x-api-key` | string | 是 | 用户本地存储的 Anthropic API 密钥 |
-| `anthropic-version` | string | 是 | 协议版本，例如 `2023-06-01` |
+| `x-api-key` | string | 是 | 用户本地存储的 Anthropic 或第三方服务 API 密钥 |
+| `anthropic-version` | string | 否 | 协议版本，默认为 `2023-06-01` |
+| `x-target-endpoint` | string | 否 | 自定义第三方兼容目标端点，未设置时默认请求官方端点 |
 
 #### 请求体 (Request Body)
 ```json
