@@ -1,0 +1,71 @@
+/* Print Stylesheet for TalkDrill Physical Tally Worksheets */
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 15mm 20mm;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+
+  /* Hide interactive web UI controls */
+  header,
+  nav,
+  button,
+  input,
+  select,
+  audio,
+  .no-print,
+  [aria-label="专注模式"],
+  [aria-label="打印纸质表"],
+  [aria-label="手动调整计数"],
+  [aria-label="音频进度条"],
+  [data-testid="audio-player-bar"] {
+    display: none !important;
+  }
+
+  /* Printable sheet container */
+  .printable-sheet {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Target shadowing text with generous handwriting room */
+  .print-drill-text {
+    font-size: 18pt !important;
+    line-height: 2.2 !important;
+    font-family: Georgia, Cambria, "Times New Roman", Times, serif !important;
+    color: #111827 !important;
+    margin-bottom: 24pt !important;
+    padding-bottom: 16pt !important;
+    border-bottom: 1pt solid #e2e8f0 !important;
+    word-break: break-word !important;
+  }
+
+  /* Print Tally Grid */
+  .print-tally-grid {
+    display: grid !important;
+    grid-template-columns: repeat(10, 1fr) !important;
+    gap: 6pt !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .print-tally-box {
+    aspect-ratio: 1 / 1 !important;
+    border: 1pt solid #94a3b8 !important;
+    border-radius: 2pt !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+}

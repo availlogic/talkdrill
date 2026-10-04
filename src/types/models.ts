@@ -1,0 +1,92 @@
+export type LanguageMode = 'translate_needed' | 'direct_foreign';
+
+export type DrillMilestone = 50 | 150 | 300 | 500;
+
+export type PlaybackRate = 0.5 | 0.75 | 1.0 | 1.25 | 1.5;
+
+export interface Article {
+  id: string;
+  title: string;
+  sourceText: string;
+  targetText: string;
+  sourceLang: string;
+  targetLang: string;
+  mode: LanguageMode;
+  targetCount: number;
+  currentCount: number;
+  audioId?: string | undefined;
+  createdAt: number;
+  updatedAt: number;
+  lastPracticedAt?: number | undefined;
+  isArchived: boolean;
+}
+
+export interface AudioItem {
+  id: string;
+  articleId: string;
+  blob: Blob;
+  mimeType: string;
+  fileName: string;
+  fileSize: number;
+  duration: number;
+  sourceType: 'tts' | 'upload';
+  createdAt: number;
+}
+
+export interface DrillLog {
+  id?: number | undefined;
+  articleId: string;
+  delta: number;
+  resultingCount: number;
+  timestamp: number;
+}
+
+export interface AppSettings {
+  translation: {
+    enabled: boolean;
+    baseUrl: string;
+    apiKey: string;
+    model: string;
+    customPrompt?: string | undefined;
+  };
+  tts: {
+    provider: 'openai' | 'elevenlabs' | 'minimax' | 'minimaxi' | 'custom';
+    baseUrl: string;
+    apiKey: string;
+    modelOrVoiceId: string;
+  };
+  audioFeedback: {
+    mechanicalClick: boolean;
+  };
+  printOptions: {
+    defaultTallyBoxes: 60 | 100;
+  };
+}
+
+export interface ZhengStrokeState {
+  fullZhengCount: number;
+  partialStrokes: number;
+  totalCount: number;
+}
+
+export interface MilestoneResult {
+  hasReached: boolean;
+  milestone?: DrillMilestone;
+  title?: string;
+  description?: string;
+}
+
+export interface LoopRegion {
+  startSec: number;
+  endSec: number;
+  isActive: boolean;
+}
+
+export interface PlayerState {
+  isPlaying: boolean;
+  currentTime: number;
+  duration: number;
+  playbackRate: PlaybackRate;
+  loopRegion: LoopRegion | null;
+  isAudioUnlocked: boolean;
+}

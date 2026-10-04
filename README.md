@@ -1,0 +1,171 @@
+# TalkDrill - 高强度外语影子跟读与过度学习特训空间
+
+TalkDrill 是一款纯前端、离线优先、去中心化的外语影子跟读（Shadowing）与肌肉记忆过度学习（Overlearning，300 至 500 遍）Web 特训应用。
+
+---
+
+## 1. 项目背景 (Background)
+
+传统语言学习软件通常强调词汇量或泛读理解，却忽视了口语流利度的本质：**发音器官肌肉记忆的过度学习**。
+成人掌握第二语言地道口语的核心瓶颈在于母语口型肌肉惯性。通过对同一句精炼地道的真实口语语料进行 300 至 500 遍的极限盲操重复，学习者能打破母语肌肉记忆，达成不假思索脱口而出的境界。
+
+TalkDrill 专为高频肌肉记忆特训而生：
+- 采用中华传统正字计数（5 划一字）与 60/100 格字帖打卡体系。
+- 拒绝中心化账号与数据泄露，所有文章、打卡记录与音频全生命周期存放在本地 IndexedDB。
+- 纸电双轨：屏幕盲操与高对比度 18pt 纸质字帖打印并重。
+
+---
+
+## 2. 架构概览 (Architecture Overview)
+
+```
+[UI Views]
+  ├── LibraryOverview (语料库与容量看板)
+  ├── CorpusStudio (直接录入 / AI 口语翻译 / TTS 音频生成)
+  ├── DrillWorkspace (跟读特训空间 / 正字矩阵 / 触控大胶囊 / 极简专注模式)
+  ├── PrintExportModal (60/100 格纸质打卡表与 Markdown 导出)
+  └── SettingsHub (Anthropic & OpenAI BYOK 凭据 / 音效设置 / 危险区原子清除)
+         │
+[Domain Services]
+  ├── corpusService (语料篇目生命周期管理，级联删除音频与打卡日志)
+  ├── drillCounterService (微秒级内存计数 + 150ms 防抖批处理持久化)
+  ├── playerEngine (原生 HTMLAudio 引擎，音调保持变速 0.5x-1.5x，A-B 精确复读)
+  ├── translationService (Anthropic BYOK 地道口语翻译服务)
+  ├── audioService (OpenAI TTS 合成 / 本地 <= 50MB 音频上传校验 / 文件导出)
+  └── printExportService (纯函数 60/100 格打卡表与 Markdown 渲染)
+         │
+[Core Utils & Storage]
+  ├── zhengMath (纯函数正字笔画计算与阶段里程碑判定：50/150/300/500 遍)
+  ├── audioClickSynth (Web Audio API 合成机械打字机清脆打卡音效)
+  ├── audioContextManager (用户手势即时解锁浏览器 AudioContext)
+  ├── storageQuota (StorageManager API 存储配额与持久化检查)
+  └── Dexie IndexedDB (talkdrill_db: articles, audios, drillLogs, settings)
+```
+
+---
+
+## 3. 设计原则 (Design Principles)
+
+1. **去中心化与隐私第一 (Privacy-First & BYOK)**：
+   - 无注册、无后端登录。用户数据完全驻留在浏览器 IndexedDB 中。
+   - 外部 AI 翻译与 TTS 仅在配置用户自有 API Key (Bring Your Own Key) 时按需发起调用。
+2. **极速零阻塞响应 (Zero-Latency Tally)**：
+   - 打卡计数（Capsule 轻触或空格键）在内存中同步完成，提供 0ms 即时触觉与听觉反馈。
+   - 采用 150ms 防抖合并策略写入 IndexedDB，支撑每分钟 60 次以上的极限连击。
+3. **离线优先 (100% Offline Capable)**：
+   - 依托 Service Worker 和 PWA 规范，静态外壳与已存音频即便在完全断网脱机状态下也能流畅无阻地练习。
+4. **纸电双轨 (Digital & Physical Dual-Track)**：
+   - 提供 18pt 字号、2.2 倍行距的高清晰度纸质排版样式，随时导出打印 60 格（300次）或 100 格（500次）练字打卡纸。
+5. **全英文沉浸交互界面 (Full English Interface)**：
+   - 整个应用的前端用户交互界面（UI/UX）、按钮、提示标签与无障碍语义标签均采用标准专业英文（English UI），营造沉浸式外语习得环境。
+
+---
+
+## 4. 构建与环境配置 (Build Instructions)
+
+本项目使用 Node.js (>= 18) 与 Vite 进行构建。
+
+### 依赖安装
+```bash
+npm install
+```
+
+### 本地开发服务器启动
+```bash
+npm run dev
+```
+开发服务器默认运行在 `http://localhost:5173`。
+
+### 生产版本编译
+```bash
+npm run build
+```
+编译产物输出至 `dist/` 目录，单包体积严格优化在 130 kB gzipped 以内。
+
+### 本地预览构建产物
+```bash
+npm run preview
+```
+
+---
+
+## 5. 测试指引 (Testing Instructions)
+
+本项目遵循严苛的测试驱动开发（TDD）规范，覆盖单元测试、变异测试与 Playwright 端到端浏览器测试。
+
+### 运行单元测试
+```bash
+npm test
+```
+或带覆盖率运行：
+```bash
+npm run test:coverage
+```
+覆盖率门禁指标：
+- 语句覆盖率 (Statements) >= 90%
+- 行覆盖率 (Lines) >= 90%
+- 分支覆盖率 (Branches) >= 85%
+- 函数覆盖率 (Functions) >= 90%
+
+### 运行 Stryker 变异测试 (Mutation Testing)
+```bash
+npm run test:mutation
+```
+变异分数门禁指标：Score >= 85% (当前实测分数：87.18%)。
+
+### 运行 Playwright E2E 浏览器自动化测试
+```bash
+npx playwright test
+```
+Playwright E2E 涵盖：
+- Elena 桌面端旅程 (1440x900 Chromium 视口)：录入语料、跟读盲操、正字更新、纸质导出、专注模式。
+- Kenji 移动端旅程 (390x844 触控视口)：大胶囊触控、高度合规 (>= 58px)、手动校准跟读遍数。
+- 100% 离线脱机测试：断网打卡、数据一致性验证。
+- 隐私危险区清空：原子抹除所有 IndexedDB 数据并复位。
+
+---
+
+## 6. 代码质量与规范检查 (Quality Gates)
+
+### 代码规范与静态分析检查
+```bash
+npm run lint
+```
+执行零告警 (0 warnings) ESLint 检查。
+
+### TypeScript 编译检查
+```bash
+npx tsc --noEmit
+```
+执行严格模式 (Strict & exactOptionalPropertyTypes) 编译检查。
+
+---
+
+## 7. 部署说明 (Deployment Instructions)
+
+### 纯前端静态部署
+由于 TalkDrill 为纯客户端去中心化架构，`dist/` 目录可部署至任何静态托管平台（Cloudflare Pages、Vercel、GitHub Pages、Netlify 等）。
+
+### Cloudflare Worker 反向代理 (可选 BYOK 跨域支持)
+当直接调用某些第三方 API 遇到浏览器 CORS 限制时，可部署 `proxy/worker.ts` 至 Cloudflare Workers：
+```bash
+cd proxy
+npx wrangler deploy
+```
+
+---
+
+## 8. 使用示例 (Usage Examples)
+
+### 桌面端键盘盲操流程
+1. 进入练习界面后，按下键盘 `Space`（空格键）或点击 "Drill +1" 按钮进行快速跟读打卡（+1）。
+2. 每打卡 1 次，界面发出清脆机械打字机音效，正字画数实时更新。
+3. 每满 5 划自动结成 1 个完整“正”字。
+4. 如需回退误触，按下键盘 `Z` 键或点击 "Undo last count" 执行撤销（-1）。
+5. 按下键盘 `R` 键即可将参考音频快退至当前 A-B 复读起点重新朗读。
+6. 点击 "Focus Mode" 可开启全黑沉浸专注模式；点击 "Print Sheet" 调出 60/100 格纸质打卡表与 Markdown 导出。
+
+### 移动端单手操作流程
+1. 底部常驻高度大于 58px 的触控大胶囊按钮（"Drill +1" 与 "Undo last count"）。
+2. 拇指轻触右侧大按钮完成 +1 打卡，轻触左侧小按钮完成 -1 撤销。
+3. 点击顶部计数标签（"Adjust Repetition Count"）可弹出数字微调弹窗，直接手动校准打卡数值。
