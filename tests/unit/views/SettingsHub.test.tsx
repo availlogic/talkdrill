@@ -92,4 +92,17 @@ describe('SettingsHub View (TDD)', () => {
     fireEvent.click(backBtn);
     expect(backSpy).toHaveBeenCalledTimes(1);
   });
+
+  it('switches and saves theme preference', async () => {
+    render(<SettingsHub onBack={vi.fn()} />);
+
+    const darkBtn = await screen.findByRole('button', { name: /Dark Mode/i });
+    fireEvent.click(darkBtn);
+
+    await waitFor(async () => {
+      const saved = await settingsService.getSettings();
+      expect(saved.theme).toBe('dark');
+      expect(document.documentElement.classList.contains('dark')).toBe(true);
+    });
+  });
 });

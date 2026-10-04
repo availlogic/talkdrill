@@ -4,6 +4,8 @@ import { CorpusStudio } from './views/CorpusStudio';
 import { DrillWorkspace } from './views/DrillWorkspace';
 import { SettingsHub } from './views/SettingsHub';
 import { audioContextManager } from './utils/audioContextManager';
+import { themeManager } from './utils/themeManager';
+import { settingsService } from './services/settingsService';
 
 export function parseRoute(hash: string): { route: string; params: Record<string, string> } {
   const clean = hash.replace(/^#\/?/, '');
@@ -22,6 +24,13 @@ export const App: React.FC = () => {
   const [routeInfo, setRouteInfo] = useState(() => parseRoute(window.location.hash));
 
   useEffect(() => {
+    themeManager.init();
+    settingsService.getSettings().then((settings) => {
+      if (settings.theme) {
+        themeManager.setPreference(settings.theme);
+      }
+    });
+
     const handleHashChange = () => {
       setRouteInfo(parseRoute(window.location.hash));
     };

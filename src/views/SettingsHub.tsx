@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Save, AlertTriangle, Shield, Volume2 } from 'lucide-react';
+import { ArrowLeft, Save, AlertTriangle, Shield, Volume2, Sun, Moon, Laptop } from 'lucide-react';
 import { settingsService } from '../services/settingsService';
+import { themeManager } from '../utils/themeManager';
 import { type AppSettings } from '../types/models';
 
 export interface SettingsHubProps {
@@ -44,6 +45,13 @@ export const SettingsHub: React.FC<SettingsHubProps> = ({ onBack }) => {
     await settingsService.updateSettings({ audioFeedback: updated.audioFeedback });
   };
 
+  const handleSelectTheme = async (theme: 'system' | 'light' | 'dark') => {
+    const updated = { ...settings, theme };
+    setSettings(updated);
+    themeManager.setPreference(theme);
+    await settingsService.updateSettings({ theme });
+  };
+
   const handleExecutePurge = async () => {
     if (purgeConfirmText !== 'DELETE') return;
     await settingsService.clearAllLocalData();
@@ -73,6 +81,45 @@ export const SettingsHub: React.FC<SettingsHubProps> = ({ onBack }) => {
           {statusMessage}
         </div>
       )}
+
+      {/* Theme Preference */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4 shadow-sm">
+        <div className="flex items-center gap-2">
+          <Sun className="w-5 h-5 text-amber-500 dark:text-amber-400" />
+          <h3 className="font-bold text-slate-900 dark:text-slate-100">Appearance & Theme</h3>
+        </div>
+        <p className="text-xs text-slate-600 dark:text-slate-400">
+          Choose between crisp Light mode, high-contrast Dark mode, or automatic synchronization with your operating system.
+        </p>
+        <div className="grid grid-cols-3 gap-3">
+          {(['system', 'light', 'dark'] as const).map((t) => {
+            const isSelected = (settings.theme ?? 'system') === t;
+            const labels = {
+              system: 'System Default',
+              light: 'Light Mode',
+              dark: 'Dark Mode',
+            };
+            return (
+              <button
+                key={t}
+                type="button"
+                aria-pressed={isSelected}
+                onClick={() => handleSelectTheme(t)}
+                className={`py-2.5 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
+                  isSelected
+                    ? 'border-blue-600 bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-500 shadow-sm'
+                    : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                }`}
+              >
+                {t === 'light' && <Sun className="w-3.5 h-3.5" />}
+                {t === 'dark' && <Moon className="w-3.5 h-3.5" />}
+                {t === 'system' && <Laptop className="w-3.5 h-3.5" />}
+                <span>{labels[t]}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       {/* Translation Config */}
       <form

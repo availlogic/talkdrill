@@ -15,6 +15,7 @@ describe('SettingsService (TDD)', () => {
 
   it('returns default settings when not previously configured', async () => {
     const settings = await service.getSettings();
+    expect(settings.theme).toBe('system');
     expect(settings.translation.enabled).toBe(true);
     expect(settings.translation.baseUrl).toBe('https://api.anthropic.com/v1');
     expect(settings.tts.provider).toBe('openai');
@@ -24,6 +25,7 @@ describe('SettingsService (TDD)', () => {
 
   it('updates specific settings independently', async () => {
     await service.updateSettings({
+      theme: 'dark',
       translation: {
         enabled: true,
         baseUrl: 'https://my-proxy.workers.dev',
@@ -45,6 +47,7 @@ describe('SettingsService (TDD)', () => {
     });
 
     const current = await service.getSettings();
+    expect(current.theme).toBe('dark');
     expect(current.translation.apiKey).toBe('sk-ant-custom');
     expect(current.translation.baseUrl).toBe('https://my-proxy.workers.dev');
     expect(current.tts.provider).toBe('elevenlabs');
@@ -54,6 +57,7 @@ describe('SettingsService (TDD)', () => {
 
   it('resets settings to default values', async () => {
     await service.updateSettings({
+      theme: 'dark',
       translation: {
         enabled: false,
         baseUrl: 'https://custom',
@@ -63,6 +67,7 @@ describe('SettingsService (TDD)', () => {
     });
 
     const res = await service.resetSettings();
+    expect(res.theme).toBe('system');
     expect(res.translation.baseUrl).toBe('https://api.anthropic.com/v1');
     expect(res.translation.apiKey).toBe('');
   });

@@ -2,6 +2,7 @@ import { db } from '../storage/db';
 import { type AppSettings } from '../types/models';
 
 export const DEFAULT_SETTINGS: AppSettings = {
+  theme: 'system',
   translation: {
     enabled: true,
     baseUrl: 'https://api.anthropic.com/v1',
@@ -31,6 +32,7 @@ export class SettingsService {
       return { ...DEFAULT_SETTINGS };
     }
     return {
+      theme: record.value.theme ?? DEFAULT_SETTINGS.theme,
       translation: { ...DEFAULT_SETTINGS.translation, ...record.value.translation },
       tts: { ...DEFAULT_SETTINGS.tts, ...record.value.tts },
       audioFeedback: { ...DEFAULT_SETTINGS.audioFeedback, ...record.value.audioFeedback },
@@ -41,6 +43,7 @@ export class SettingsService {
   async updateSettings(partial: Partial<AppSettings>): Promise<AppSettings> {
     const current = await this.getSettings();
     const updated: AppSettings = {
+      theme: partial.theme !== undefined ? partial.theme : current.theme,
       translation: partial.translation ? { ...current.translation, ...partial.translation } : current.translation,
       tts: partial.tts ? { ...current.tts, ...partial.tts } : current.tts,
       audioFeedback: partial.audioFeedback ? { ...current.audioFeedback, ...partial.audioFeedback } : current.audioFeedback,

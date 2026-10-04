@@ -21,7 +21,7 @@ export const BigDrillCapsule: React.FC<BigDrillCapsuleProps> = ({
         onClick={onUndo}
         disabled={disabled}
         aria-label="Undo last count"
-        className="h-14 sm:h-16 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium flex items-center justify-center transition-transform active:scale-95 disabled:opacity-40 disabled:pointer-events-none"
+        className="h-14 sm:h-16 px-4 rounded-2xl bg-slate-200/80 hover:bg-slate-300/80 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300/80 dark:border-slate-700 text-slate-800 dark:text-slate-100 font-semibold flex items-center justify-center transition-transform active:scale-95 disabled:opacity-40 disabled:pointer-events-none shadow-xs"
       >
         <RotateCcw className="w-5 h-5 mr-1" />
         <span className="text-sm">-1</span>

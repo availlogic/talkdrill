@@ -59,10 +59,10 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
           aria-label="Audio progress bar"
           className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600 disabled:opacity-40"
         />
-        <div className="flex items-center justify-between text-xs font-mono text-slate-500 dark:text-slate-400">
+        <div className="flex items-center justify-between text-xs font-mono font-medium text-slate-700 dark:text-slate-300">
           <span>{timeDisplay}</span>
           {isLooping && loopStart !== null && loopEnd !== null && (
-            <span className="text-amber-600 dark:text-amber-400">
+            <span className="text-amber-700 dark:text-amber-300 font-semibold">
               A-B Loop [{formatAudioTime(loopStart)} - {formatAudioTime(loopEnd)}]
             </span>
           )}
@@ -76,7 +76,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
             disabled={disabled}
             onClick={() => onJump(-5)}
             aria-label="Rewind 5s"
-            className="p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 text-xs font-mono disabled:opacity-40"
+            className="p-1.5 rounded-lg text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 text-xs font-mono font-semibold disabled:opacity-40"
           >
             -5s
           </button>
@@ -85,7 +85,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
             disabled={disabled}
             onClick={() => onJump(-2)}
             aria-label="Rewind 2s"
-            className="p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 text-xs font-mono disabled:opacity-40"
+            className="p-1.5 rounded-lg text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 text-xs font-mono font-semibold disabled:opacity-40"
           >
             -2s
           </button>
@@ -105,7 +105,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
             disabled={disabled}
             onClick={() => onJump(2)}
             aria-label="Forward 2s"
-            className="p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 text-xs font-mono disabled:opacity-40"
+            className="p-1.5 rounded-lg text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 text-xs font-mono font-semibold disabled:opacity-40"
           >
             +2s
           </button>
@@ -114,13 +114,13 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
             disabled={disabled}
             onClick={() => onJump(5)}
             aria-label="Forward 5s"
-            className="p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 text-xs font-mono disabled:opacity-40"
+            className="p-1.5 rounded-lg text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 text-xs font-mono font-semibold disabled:opacity-40"
           >
             +5s
           </button>
         </div>
 
-        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl">
+        <div className="flex items-center gap-1 bg-slate-200/70 dark:bg-slate-800 border border-slate-300/70 dark:border-slate-700 p-0.5 rounded-xl shadow-xs">
           {SPEED_OPTIONS.map((rate) => (
             <button
               key={rate}
@@ -130,8 +130,8 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
               aria-label={`${rate}x`}
               className={`px-2 py-1 text-xs font-medium rounded-lg transition-colors ${
                 playbackRate === rate
-                  ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm font-semibold'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+                  ? 'bg-white dark:bg-slate-700 text-blue-700 dark:text-blue-300 shadow-xs font-semibold'
+                  : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
               } disabled:opacity-40`}
             >
               {rate}x

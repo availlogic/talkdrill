@@ -195,10 +195,11 @@
 
 ### 6.2 Layout & Hierarchy
 - 垂直 Tab 分组或卡片分组：
-  1. **场景翻译配置 (Translation Engine)**：服务启用开关、Base URL（默认预置官方 Anthropic 端点或用户 Cloudflare Worker 代理）、API Key 密码输入框、Model Name（如 `claude-3-5-sonnet-20241022`）、口语化 Prompt 自定义覆盖文本框。
-  2. **语音合成配置 (TTS Engine)**：供应商下拉单选（`openai` / `elevenlabs` / `minimaxi` / `custom`）、Base URL、API Key 密码输入框、Voice ID / Model 输入框。
-  3. **交互与偏好 (Interaction & Preferences)**：机械打卡咔哒声开关（Web Audio 合成）、默认打印方格偏好（60 格 / 100 格）。
-  4. **数据存储与危险区 (Data & Danger Zone)**：持久化存储申请状态、存储占用百分比、导出整库 JSON 备份按钮、红色警告框“清空全部本地数据”。
+  1. **外观与主题偏好 (Appearance & Theme)**：主题单选按钮组（System Default / Light Mode / Dark Mode），通过 class 类名机制联动全局画布与前景对比度，确保全站达成 WCAG AAA 级高对比可读性。
+  2. **场景翻译配置 (Translation Engine)**：服务启用开关、Base URL（默认预置官方 Anthropic 端点或用户 Cloudflare Worker 代理）、API Key 密码输入框、Model Name（如 `claude-3-5-sonnet-20241022`）、口语化 Prompt 自定义覆盖文本框。
+  3. **语音合成配置 (TTS Engine)**：供应商下拉单选（`openai` / `elevenlabs` / `minimaxi` / `custom`）、Base URL、API Key 密码输入框、Voice ID / Model 输入框。
+  4. **交互与偏好 (Interaction & Preferences)**：机械打卡咔哒声开关（Web Audio 合成）、默认打印方格偏好（60 格 / 100 格）。
+  5. **数据存储与危险区 (Data & Danger Zone)**：持久化存储申请状态、存储占用百分比、导出整库 JSON 备份按钮、红色警告框“清空全部本地数据”。
 
 ### 6.3 Validation & Security
 - API Key 输入框采用 `type="password"`，带“显示/隐藏”小眼睛切换图标。

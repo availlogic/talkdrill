@@ -8,8 +8,23 @@
     <meta name="description" content="TalkDrill - High-intensity foreign language shadowing and muscle memory trainer" />
     <link rel="manifest" href="/manifest.json" />
     <title>TalkDrill - Shadowing & Overlearning Trainer</title>
+    <script>
+      (function() {
+        try {
+          var pref = localStorage.getItem('talkdrill_theme_pref');
+          var isDark = pref === 'dark' || ((!pref || pref === 'system') && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (isDark) {
+            document.documentElement.classList.add('dark');
+            document.documentElement.setAttribute('data-theme', 'dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.setAttribute('data-theme', 'light');
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
-  <body class="bg-slate-50 text-slate-900 antialiased selection:bg-blue-200">
+  <body class="antialiased selection:bg-blue-200">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

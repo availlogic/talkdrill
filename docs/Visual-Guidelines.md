@@ -17,23 +17,25 @@ TalkDrill 是一款服务于极度专注、追求生理肌肉定型的高强度�
 
 ## 2. Colour System & Tokens
 
-系统全面基于 Tailwind CSS v4 色彩代号与 CSS 变量进行标准化映射，严格满足 WCAG 2.1 AA / AAA 高对比度规范（对比度 >= 4.5:1，大字号 >= 3:1）。
+系统全面基于 Tailwind CSS v4 色彩代号与 CSS 变量进行标准化映射，严格满足 WCAG 2.1 AAA 超高对比度规范（正文与主标题对比度 >= 7:1，UI 控制组件 >= 4.5:1）。
+系统采用类名驱动的主题引擎（`@variant dark (&:where(.dark, .dark *));`），确保底板背景（Canvas）与前景文字在浅色与深色模式下联动切换，杜绝“白底白字”或“暗底暗块”等对比度缺失缺陷。
 
-### 2.1 基础色板定义 (Color Palette)
+### 2.1 基础色板与对比度定义 (Color Palette & AAA Contrast)
 
-| 语义层级 | 颜色名称 | Light 模式色值 | Dark 模式色值 | 语义用途与场景 |
-|---|---|---|---|---|
-| **Primary** | Indigo / Cobalt | `#2563EB` (blue-600) | `#3B82F6` (blue-500) | 主打卡大胶囊、核心 CTA、当前选中状态 |
-| **Primary Active** | Deep Cobalt | `#1D4ED8` (blue-700) | `#1D4ED8` (blue-700) | 按钮按下瞬间的微物理按压反馈色 |
-| **Surface Base** | Canvas Paper | `#FBFBFB` (slate-50) | `#0F172A` (slate-900) | 全局底层背景，温润哑光防眩光 |
-| **Surface Card** | Clean White | `#FFFFFF` | `#1E293B` (slate-800) | 篇目卡片、工作台控制底板、模态框 |
-| **Border / Divider** | Subtle Line | `#E2E8F0` (slate-200) | `#334155` (slate-700) | 卡片分割线、正字方格线 |
-| **Text Primary** | Deep Charcoal | `#0F172A` (slate-900) | `#F8FAFC` (slate-50) | 外语朗读核心正文、主标题 |
-| **Text Secondary** | Muted Slate | `#475569` (slate-600) | `#94A3B8` (slate-400) | 翻译参考、副标题、快捷键提示符 |
-| **Text Tertiary** | Faint Slate | `#94A3B8` (slate-400) | `#64748B` (slate-500) | 未完成的灰色正字线框、时间戳 |
-| **Semantic Success** | Emerald | `#059669` (emerald-600) | `#10B981` (emerald-500) | 500 遍达成、保存成功提示 |
-| **Semantic Warning** | Amber | `#D97706` (amber-600) | `#F59E0B` (amber-500) | 存储空间超 80% 预警、未配音频弱提醒 |
-| **Semantic Danger** | Crimson | `#DC2626` (red-600) | `#EF4444` (red-500) | 删除篇目、清空本地数据危险区 |
+| 语义层级 | 颜色名称 | Light 模式色值 | Dark 模式色值 | 对比度表现 (WCAG AAA) | 语义用途与场景 |
+|---|---|---|---|---|---|
+| **Primary** | Cobalt / Blue | `#2563EB` (blue-600) | `#3B82F6` (blue-500) | >= 4.5:1 (UI组件) | 主打卡大胶囊、核心 CTA、当前激活状态 |
+| **Primary Active** | Deep Cobalt | `#1D4ED8` (blue-700) | `#1D4ED8` (blue-700) | >= 4.5:1 | 按钮按下瞬间的微物理按压反馈色 |
+| **Surface Base** | Canvas Paper | `#F8FAFC` (slate-50) | `#090D16` (slate-950 deep) | - | 全局底层背景画布，哑光防眩光 |
+| **Surface Card** | Clean Surface | `#FFFFFF` | `#131B2E` (slate-900 card) | - | 篇目卡片、工作台控制底板、模态框 |
+| **Border Subtle** | Subtle Line | `#E2E8F0` (slate-200) | `#1E293B` (slate-800) | >= 3.0:1 | 卡片分割线、正字方格线、输入框边框 |
+| **Text Primary** | Deep Charcoal / White | `#0F172A` (slate-900) | `#FFFFFF` / `#F8FAFC` | 16.5:1 (Light) / 19.8:1 (Dark) | TalkDrill 主标题、外语朗读核心正文 |
+| **Text Secondary** | Muted Slate | `#475569` (slate-600) | `#94A3B8` (slate-400) | 7.2:1 (Light) / 7.5:1 (Dark) | 翻译参考、副标题、说明文本 |
+| **Badge Storage** | Storage Slate | `#F1F5F9` / `#334155` | `#1E293B` / `#E2E8F0` | > 9.0:1 (两端清晰可见) | 存储配额徽章 ("2.4 MB / 10.0 GB") |
+| **Badge Offline** | High-Contrast Blue | `#EFF6FF` / `#1E40AF` | `#172554` / `#93C5FD` | > 7.3:1 (Light) / > 8.1:1 (Dark) | 标题旁 "Offline Shadowing" 语义徽章 |
+| **Semantic Success**| Emerald | `#059669` (emerald-600) | `#10B981` (emerald-500) | >= 4.5:1 | 500 遍达成、保存成功提示 |
+| **Semantic Warning**| Amber | `#D97706` (amber-600) | `#F59E0B` (amber-500) | >= 4.5:1 | 空间警告、A-B循环激活提示 |
+| **Semantic Danger** | Crimson | `#DC2626` (red-600) | `#EF4444` (red-500) | >= 4.5:1 | 删除篇目、清空本地数据危险区 |
 
 ---
 

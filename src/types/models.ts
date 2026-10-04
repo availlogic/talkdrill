@@ -41,7 +41,10 @@ export interface DrillLog {
   timestamp: number;
 }
 
+export type ThemePreference = 'system' | 'light' | 'dark';
+
 export interface AppSettings {
+  theme?: ThemePreference | undefined;
   translation: {
     enabled: boolean;
     baseUrl: string;

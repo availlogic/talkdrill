@@ -40,7 +40,7 @@ export const ZhengBox: React.FC<ZhengBoxProps> = ({ index, strokes, onClick }) =
       data-strokes={strokes}
       onClick={handleClick}
       aria-label={`Box ${index + 1}: ${strokes} strokes`}
-      className="w-8 h-8 sm:w-10 sm:h-10 border border-slate-200 dark:border-slate-800 rounded bg-white dark:bg-slate-900 flex items-center justify-center p-0.5 hover:border-slate-400 dark:hover:border-slate-600 transition-colors"
+      className="w-8 h-8 sm:w-10 sm:h-10 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-slate-900 flex items-center justify-center p-0.5 hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
     >
       <svg
         viewBox="0 0 100 100"
