@@ -92,8 +92,12 @@ describe('CorpusStudio View (TDD)', () => {
     expect(cancelSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('handles language and target reps selection, file parsing and TTS generation', async () => {
+  it('handles language and target reps selection, file parsing and audio upload without in-app TTS button', async () => {
     render(<CorpusStudio onCancel={vi.fn()} onStartDrill={vi.fn()} />);
+
+    // In current version, in-app TTS generation button must not be present
+    expect(screen.queryByRole('button', { name: /Generate AI Voice/i })).toBeNull();
+    expect(screen.getByText(/Upload Reference Audio/i)).toBeDefined();
 
     // Select target language
     const langSelect = screen.getByLabelText('Target Language') as HTMLSelectElement;

@@ -21,17 +21,17 @@ TalkDrill 专为高频肌肉记忆特训而生：
 ```
 [UI Views]
   ├── LibraryOverview (语料库与容量看板)
-  ├── CorpusStudio (直接录入 / AI 口语翻译 / TTS 音频生成)
+  ├── CorpusStudio (直接录入 / AI 口语翻译 / 自有与第三方生成音频导入)
   ├── DrillWorkspace (跟读特训空间 / 正字矩阵 / 触控大胶囊 / 极简专注模式)
   ├── PrintExportModal (60/100 格纸质打卡表与 Markdown 导出)
-  └── SettingsHub (Anthropic & OpenAI BYOK 凭据 / 音效设置 / 危险区原子清除)
+  └── SettingsHub (Anthropic BYOK 凭据与同源代理 / 主题模式 / 危险区原子清除)
          │
 [Domain Services]
   ├── corpusService (语料篇目生命周期管理，级联删除音频与打卡日志)
   ├── drillCounterService (微秒级内存计数 + 150ms 防抖批处理持久化)
   ├── playerEngine (原生 HTMLAudio 引擎，音调保持变速 0.5x-1.5x，A-B 精确复读)
   ├── translationService (Anthropic BYOK 地道口语翻译服务)
-  ├── audioService (OpenAI TTS 合成 / 本地 <= 50MB 音频上传校验 / 文件导出)
+  ├── audioService (本地与外部生成音频 <= 50MB 上传校验 / 原生 Blob 持久化 / 文件导出)
   └── printExportService (纯函数 60/100 格打卡表与 Markdown 渲染)
          │
 [Core Utils & Storage]
@@ -47,7 +47,7 @@ TalkDrill 专为高频肌肉记忆特训而生：
 
 1. **去中心化与隐私第一 (Privacy-First & BYOK)**：
    - 无注册、无后端登录。用户数据完全驻留在浏览器 IndexedDB 中。
-   - 外部 AI 翻译与 TTS 仅在配置用户自有 API Key (Bring Your Own Key) 时按需发起调用。
+   - 外部 AI 翻译仅在配置用户自备 API Key (Bring Your Own Key) 时按需发起调用；音频采用用户外部生成或自有录音上传模式（应用内在线 TTS 合成规划于下一代版本引入）。
 2. **极速零阻塞响应 (Zero-Latency Tally)**：
    - 打卡计数（Capsule 轻触或空格键）在内存中同步完成，提供 0ms 即时触觉与听觉反馈。
    - 采用 150ms 防抖合并策略写入 IndexedDB，支撑每分钟 60 次以上的极限连击。

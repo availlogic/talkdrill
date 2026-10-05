@@ -105,13 +105,13 @@
 
 ## 4. Feature: 音频获取与管理 (Audio Engine)
 
-### TC-FT-AUD-001: 在线 TTS 语音合成与原生二进制 Blob 存入
+### TC-FT-AUD-001: 外部平台生成示范音频上传与原生二进制 Blob 存入
 - **Feature Name**: 音频获取与管理
-- **Preconditions**: 已配置有效 TTS 凭据（如 OpenAI TTS），目标外语框已存在文本。
+- **Preconditions**: 用户在第三方语音平台（如 ElevenLabs、OpenAI）根据目标外语生成示范音频，并准备上传。
 - **Steps**:
-  1. 选择发音人 `Alloy`，点击“🎙️ 一键合成示范音频”。
-  2. 合成完毕后，观察界面状态。
-- **Expected Result**: 成功拉取音频流并在客户端组装为原生 `Blob`（`audio/mpeg`）；持久化写入 IndexedDB；音频试听条点亮，展示音频时长（如 2.8s）。
+  1. 在语料录入页点击“Upload Reference Audio (.mp3, .wav)”，选择外部生成的示范音频文件。
+  2. 上传完毕后，观察界面状态。
+- **Expected Result**: 客户端接收文件并组装为原生 `Blob`（`audio/mpeg` 或对应格式）；持久化写入 IndexedDB；音频就绪徽标点亮并显示文件大小；支持在跟读工作台流畅播放。
 - **Priority**: Critical
 
 ### TC-FT-AUD-002: 本地自有音频上传与体积限制 (<= 50MB)
@@ -285,13 +285,13 @@
 
 ## 8. Feature: 系统设置与数据抹除 (Settings & Purge)
 
-### TC-FT-SET-001: 翻译与 TTS 凭据完全解耦独立保存
+### TC-FT-SET-001: 场景翻译凭据配置与同源代理状态独立保存
 - **Feature Name**: 系统设置与数据抹除
 - **Preconditions**: 打开 Screen 5: Settings。
 - **Steps**:
-  1. 填写 Anthropic 翻译配置（Key: `sk-ant-test`），清空 TTS 配置中的 Key。
+  1. 填写 Anthropic 翻译配置（Base URL, Model, Key: `sk-ant-test`），配置同源代理选项。
   2. 保存设置并重新打开设置面板。
-- **Expected Result**: 翻译配置保持有效，TTS 配置独立保持为空；两套服务的 Base URL、Key 与模型名称互不干扰、完全隔离。
+- **Expected Result**: 翻译配置保持有效且持久化；当前版本设置界面不暴露 TTS 配置表单，保持极简专注。
 - **Priority**: High
 
 ### TC-FT-SET-002: 彻底抹除全部本地数据 (双重安全防护)

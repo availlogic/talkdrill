@@ -97,34 +97,24 @@ flowchart TD
 flowchart TD
     AudioStart([进入音频准备环节]) --> AudioSource{选择音频获取途径}
     
-    AudioSource -->|途径 1: 在线 TTS 合成| TTSConfig[选择已配置的 TTS 引擎与发音人]
-    AudioSource -->|途径 2: 上传自有音频| UploadAudio[拖拽/选择 .mp3 / .wav / .m4a]
-    AudioSource -->|途径 3: 暂不配音频| SilentMode[选择'无音频纯文本朗读']
+    AudioSource -->|途径 1: 上传外部平台生成或自有音频| UploadAudio[选择/上传 .mp3 / .wav / .m4a]
+    AudioSource -->|途径 2: 暂不配音频| SilentMode[选择'无音频纯文本朗读']
     
     UploadAudio --> CheckAudioSize{文件 <= 50MB?}
-    CheckAudioSize -->|否| AudioSizeErr[Toast: 音频单文件必须 <= 50MB] --> AudioStart
+    CheckAudioSize -->|否| AudioSizeErr[提示: 音频单文件必须 <= 50MB] --> AudioStart
     CheckAudioSize -->|是| ReadBlob[本地读取为原生 Blob 并存入 IndexedDB] --> Ready
-    
-    TTSConfig --> TriggerTTS[点击'生成示范音频']
-    TriggerTTS --> CheckTTSKey{已配置 TTS Key?}
-    CheckTTSKey -->|未配置| PopTTSKey[提示并打开 TTS 配置面板] --> TTSConfig
-    CheckTTSKey -->|已配置| FetchTTS[向代理发起流式合成请求]
-    
-    FetchTTS --> TTSSuccess{合成成功?}
-    TTSSuccess -->|失败| ShowTTSErr[提示失败原因并支持重试] --> AudioStart
-    TTSSuccess -->|成功| StoreBlob[接收二进制流直接存入 IndexedDB] --> Ready
     
     SilentMode --> Ready
     Ready --> FinishArticle[点击'完成并开始练习']
     FinishArticle --> SaveDB[写入 TalkDrillDB 并进入核心工作台]
     
-    subgraph AudioDownload ["防二次付费保护"]
+    subgraph AudioDownload ["防二次丢失备份"]
         Ready --> OptDownload[用户可随时点击'下载示范音频'至磁盘备份]
     end
 ```
 
 - **用户目标**：为语料绑定母语级原声或自有录音，并持久化到本地。
-- **核心体验**：生成后即刻提供“下载音频”按钮，帮助用户主动规避清理浏览器缓存引发的二次 API 费用。
+- **核心体验**：支持用户借助第三方平台根据文本生成音频后上传，并提供音频下载备份保护。
 
 ---
 
@@ -223,15 +213,13 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    OpenSettings([点击右上角设置图标]) --> ShowTabs[展示设置面板: 翻译设置 / TTS 设置 / 数据管理]
+    OpenSettings([点击右上角设置图标]) --> ShowTabs[展示设置面板: 主题偏好 / 场景翻译 / 危险区]
     
-    ShowTabs --> ConfigTrans[配置 Anthropic Base URL, API Key, Model, 口语 Prompt]
-    ShowTabs --> ConfigTTS[配置 TTS 供应商类型, Base URL, API Key, Voice ID]
-    ShowTabs --> ConfigMisc[配置默认打印方格偏好]
+    ShowTabs --> ConfigTheme[配置主题偏好: System / Light / Dark]
+    ShowTabs --> ConfigTrans[配置 Anthropic Base URL, Model, API Key 与同源代理]
     
-    ConfigTrans --> SaveSettings[点击保存配置 -> 仅写入本地 IndexedDB]
-    ConfigTTS --> SaveSettings
-    ConfigMisc --> SaveSettings
+    ConfigTheme --> SaveSettings[点击保存配置 -> 仅写入本地 IndexedDB]
+    ConfigTrans --> SaveSettings
     
     ShowTabs --> DangerZone[进入'危险区域: 清空所有数据']
     DangerZone --> ClickPurge[点击'清空全部本地数据']

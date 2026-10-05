@@ -20,7 +20,6 @@ export const CorpusStudio: React.FC<CorpusStudioProps> = ({ onCancel, onStartDri
   const [targetCount, setTargetCount] = useState<number>(500);
   const [translating, setTranslating] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
-  const [isGeneratingTts, setIsGeneratingTts] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleTranslate = async () => {
@@ -67,21 +66,6 @@ export const CorpusStudio: React.FC<CorpusStudioProps> = ({ onCancel, onStartDri
       setAudioBlob(blob);
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Audio upload failed.');
-    }
-  };
-
-  const handleGenerateTts = async () => {
-    const textToSpeak = targetText.trim();
-    if (!textToSpeak) return;
-    setIsGeneratingTts(true);
-    setErrorMessage(null);
-    try {
-      const blob = await audioService.generateSpeech({ text: textToSpeak, voice: 'alloy' });
-      setAudioBlob(blob);
-    } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'TTS synthesis failed. Please verify TTS API key in Settings.');
-    } finally {
-      setIsGeneratingTts(false);
     }
   };
 
@@ -275,35 +259,41 @@ export const CorpusStudio: React.FC<CorpusStudioProps> = ({ onCancel, onStartDri
         </div>
       )}
 
-      {/* Audio Generation & Upload Card */}
+      {/* Audio Upload & Reference Card */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-3 shadow-xs">
-        <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-          <Volume2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-          <span>Native Reference Audio</span>
-        </h4>
+        <div className="flex items-center justify-between">
+          <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+            <Volume2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <span>Native Reference Audio</span>
+          </h4>
+          <span className="text-[11px] text-slate-600 dark:text-slate-400">Optional (supports .mp3, .wav, .m4a)</span>
+        </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={handleGenerateTts}
-            disabled={isGeneratingTts || !targetText.trim()}
-            className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 disabled:opacity-40 shadow-sm"
-          >
-            <Volume2 className="w-3.5 h-3.5" />
-            <span>{isGeneratingTts ? 'Generating TTS...' : 'Generate AI Voice (TTS)'}</span>
-          </button>
+        <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+          Tip: Generate native speech on your favorite external voice platform (e.g. ElevenLabs, OpenAI) according to the target text, then upload the audio file here (max 50MB).
+        </p>
 
-          <label className="px-3 py-2 border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl flex items-center gap-1.5 cursor-pointer">
-            <Upload className="w-3.5 h-3.5" />
-            <span>Upload Local Audio (.mp3, .wav)</span>
+        <div className="flex flex-wrap items-center gap-3 pt-1">
+          <label className="px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl flex items-center gap-2 cursor-pointer transition-colors">
+            <Upload className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <span>{audioBlob ? 'Replace Reference Audio' : 'Upload Reference Audio (.mp3, .wav)'}</span>
             <input type="file" accept="audio/*" onChange={handleAudioUpload} className="hidden" />
           </label>
 
           {audioBlob && (
-            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
-              <Check className="w-3.5 h-3.5" />
-              <span>Audio Ready ({(audioBlob.size / 1024).toFixed(0)} KB)</span>
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                <Check className="w-3.5 h-3.5" />
+                <span>Audio Ready ({(audioBlob.size / 1024).toFixed(0)} KB)</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setAudioBlob(null)}
+                className="text-xs text-slate-600 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 underline ml-1"
+              >
+                Remove
+              </button>
+            </div>
           )}
         </div>
       </div>

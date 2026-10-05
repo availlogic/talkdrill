@@ -9,11 +9,12 @@ describe('SettingsHub View (TDD)', () => {
     await db.settings.clear();
   });
 
-  it('renders decoupled Translation and TTS BYOK forms without mechanical click or sound feedback', async () => {
+  it('renders decoupled Translation and theme settings without TTS form in current version', async () => {
     render(<SettingsHub onBack={vi.fn()} />);
 
     expect(await screen.findByText('Translation Engine (BYOK)')).toBeDefined();
-    expect(screen.getByText('Text-to-Speech (TTS) Configuration')).toBeDefined();
+    expect(screen.queryByText('Text-to-Speech (TTS) Configuration')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Save TTS Settings' })).toBeNull();
     expect(screen.queryByText('Mechanical Click Sound Feedback')).toBeNull();
     expect(screen.queryByText('Drill Preferences')).toBeNull();
   });
@@ -81,27 +82,14 @@ describe('SettingsHub View (TDD)', () => {
     });
   });
 
-  it('updates and saves TTS provider settings', async () => {
+  it('does not expose TTS configuration inputs or save button in current release', async () => {
     render(<SettingsHub onBack={vi.fn()} />);
 
-    const provSelect = (await screen.findByLabelText('Provider')) as HTMLSelectElement;
-    fireEvent.change(provSelect, { target: { value: 'elevenlabs' } });
-
-    const voiceInput = screen.getByLabelText('Voice ID / Model') as HTMLInputElement;
-    fireEvent.change(voiceInput, { target: { value: 'rachel' } });
-
-    const keyInput = screen.getByLabelText('TTS API Key') as HTMLInputElement;
-    fireEvent.change(keyInput, { target: { value: 'el-key-123' } });
-
-    const saveTtsBtn = screen.getByRole('button', { name: 'Save TTS Settings' });
-    fireEvent.click(saveTtsBtn);
-
-    await waitFor(async () => {
-      const saved = await settingsService.getSettings();
-      expect(saved.tts.provider).toBe('elevenlabs');
-      expect(saved.tts.modelOrVoiceId).toBe('rachel');
-      expect(saved.tts.apiKey).toBe('el-key-123');
-    });
+    expect(await screen.findByText('Translation Engine (BYOK)')).toBeDefined();
+    expect(screen.queryByLabelText('Provider')).toBeNull();
+    expect(screen.queryByLabelText('Voice ID / Model')).toBeNull();
+    expect(screen.queryByLabelText('TTS API Key')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Save TTS Settings' })).toBeNull();
   });
 
   it('calls onBack callback when back button is clicked', async () => {

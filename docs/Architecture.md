@@ -173,24 +173,24 @@ sequenceDiagram
     participant TTS as TTS Provider
     participant DB as Dexie.js (IndexedDB)
 
-    alt 在线 TTS 合成
-        User->>UI: 点击“生成音频”
+    alt 本地/第三方生成音频上传 (当前主流程)
+        User->>UI: 选择外部生成或自有音频文件 (.mp3 / .wav / .m4a <= 50MB)
+        UI->>Audio: processLocalAudioUpload(file)
+        Audio->>Audio: 校验文件格式与尺寸，提取原生 Blob
+    else 在线 TTS 合成 (下代大版本规划特性)
+        User->>UI: 预留未来入口
         UI->>Audio: synthesizeSpeech(targetText, ttsConfig)
         Audio->>Proxy: POST /api/proxy/tts (带 Target Endpoint 与 API Key)
         Proxy->>TTS: 转发语音合成请求
         TTS-->>Proxy: 返回音频二进制流 (audio/mpeg 等)
         Proxy-->>Audio: 转发二进制流
         Audio->>Audio: 构造原生 Blob (type: audio/mpeg)
-    else 本地音频上传
-        User->>UI: 拖拽自有音频文件 (.mp3 / .wav / .m4a <= 50MB)
-        UI->>Audio: loadLocalAudio(file)
-        Audio->>Audio: 校验文件格式与尺寸，提取原生 Blob
     end
 
     Audio->>DB: audios.put({ articleId, blob, mimeType, duration, ... })
     DB-->>Audio: 持久化成功
     Audio-->>UI: 音频就绪，装载至 PlayerEngine
-    opt 用户防二次付费备份
+    opt 用户离线备份
         User->>UI: 点击“下载音频”
         UI->>Audio: exportAudio(articleId)
         Audio-->>User: 触发浏览器本地磁盘保存
@@ -267,8 +267,8 @@ sequenceDiagram
 - 严禁引入任何第三方埋点统计（如 Google Analytics、Baidu Tongji）及广告 SDK。
 
 ### 6.2 BYOK 密钥客户端安全隔离
-- 用户输入的 Anthropic API Key 与 TTS Provider Key 仅存放在用户浏览器本地沙箱（IndexedDB 专属 `settings` 表）。
-- 密钥不与任何第三方中心服务器同步，仅在用户主动发起翻译或 TTS 生成时，作为 HTTP Authorization Header 发送至用户指定的 Base URL（或自建 Cloudflare Worker）。
+- 用户输入的 Anthropic API Key 仅存放在用户浏览器本地沙箱（IndexedDB 专属 `settings` 表）。
+- 密钥不与任何第三方中心服务器同步，仅在用户主动发起翻译时，作为 HTTP Authorization Header 发送至用户指定的 Base URL（或同源 Cloudflare Pages 边缘服务）。
 
 ### 6.3 Cloudflare Worker 无状态管道安全规范
 - **Stateless Pipeline**：Worker 内存不保存任何请求上下文，请求处理完毕即刻释放。
