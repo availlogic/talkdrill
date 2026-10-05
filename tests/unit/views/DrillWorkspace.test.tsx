@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { DrillWorkspace } from '../../../src/views/DrillWorkspace';
 import { db } from '../../../src/storage/db';
 import { corpusService } from '../../../src/services/corpusService';
+import { playerEngine } from '../../../src/services/playerEngine';
 
 describe('DrillWorkspace View (TDD)', () => {
   let articleId: string;
@@ -105,14 +106,26 @@ describe('DrillWorkspace View (TDD)', () => {
     expect(screen.getByRole('button', { name: /focus mode/i })).toBeDefined();
   });
 
-  it('triggers replay with KeyR shortcut and opens print modal', async () => {
+  it('triggers replay with KeyP shortcut and ignores browser shortcuts with modifiers', async () => {
     const backSpy = vi.fn();
     render(<DrillWorkspace articleId={articleId} onBack={backSpy} />);
 
     await screen.findByText('¿Nos cobras, por favor?');
 
-    // Press KeyR
-    fireEvent.keyDown(window, { code: 'KeyR' });
+    const playSpy = vi.spyOn(playerEngine, 'play');
+
+    // Press KeyR with metaKey & shiftKey (browser hard refresh Cmd+Shift+R) - must NOT trigger replay
+    fireEvent.keyDown(window, { code: 'KeyR', metaKey: true, shiftKey: true });
+    expect(playSpy).not.toHaveBeenCalled();
+
+    // Press KeyP with metaKey (browser print Cmd+P) - must NOT trigger replay
+    fireEvent.keyDown(window, { code: 'KeyP', metaKey: true });
+    expect(playSpy).not.toHaveBeenCalled();
+
+    // Press KeyP alone - triggers replay
+    fireEvent.keyDown(window, { code: 'KeyP' });
+    expect(playSpy).toHaveBeenCalled();
+    playSpy.mockRestore();
 
     // Open print modal
     const printBtn = screen.getByRole('button', { name: /print worksheet/i });
@@ -128,7 +141,7 @@ describe('DrillWorkspace View (TDD)', () => {
     expect(backSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('renders audio player bar and handles player controls when audio exists', async () => {
+  it('renders audio player bar and handles player controls and A-B loop cancellation when audio exists', async () => {
     await db.audios.add({
       id: 'audio-art-1',
       articleId,
@@ -152,8 +165,24 @@ describe('DrillWorkspace View (TDD)', () => {
     fireEvent.click(screen.getByRole('button', { name: '1.25x' }));
     fireEvent.click(screen.getByRole('button', { name: 'Forward 2s' }));
     fireEvent.click(screen.getByRole('button', { name: 'Rewind 2s' }));
+
+    // Set loop start A
+    fireEvent.click(screen.getByRole('button', { name: 'Set loop start A' }));
+
+    // Should immediately display A reference info and Clear loop button
+    expect(await screen.findByText(/A: \[/i)).toBeDefined();
+    const clearLoopBtn = screen.getByRole('button', { name: 'Clear loop' });
+    expect(clearLoopBtn).toBeDefined();
+
+    // User can cancel A immediately without selecting B
+    fireEvent.click(clearLoopBtn);
+    expect(screen.queryByText(/A: \[/i)).toBeNull();
+
+    // Now set A and B
     fireEvent.click(screen.getByRole('button', { name: 'Set loop start A' }));
     fireEvent.click(screen.getByRole('button', { name: 'Set loop end B' }));
+    expect(await screen.findByText(/A-B Loop/i)).toBeDefined();
+
     fireEvent.click(screen.getByRole('button', { name: /pause/i }));
   });
 

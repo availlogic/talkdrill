@@ -103,4 +103,27 @@ describe('AudioPlayerBar Component (TDD)', () => {
     const playBtn = screen.getByRole('button', { name: /play/i }) as HTMLButtonElement;
     expect(playBtn.disabled).toBe(true);
   });
+
+  it('displays reference status and allows clearing when only point A is set', () => {
+    const clearLoopSpy = vi.fn();
+    render(
+      <AudioPlayerBar
+        {...defaultProps}
+        isLooping={false}
+        loopStart={12}
+        loopEnd={null}
+        onClearLoop={clearLoopSpy}
+      />
+    );
+
+    // Reference time for point A should be clearly visible for the user before picking B
+    expect(screen.getByText(/A: \[00:12\]/)).toBeDefined();
+
+    // The Clear loop button must be available even when only point A is chosen
+    const clearBtn = screen.getByRole('button', { name: 'Clear loop' });
+    expect(clearBtn).toBeDefined();
+
+    fireEvent.click(clearBtn);
+    expect(clearLoopSpy).toHaveBeenCalledTimes(1);
+  });
 });

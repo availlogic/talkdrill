@@ -44,28 +44,52 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
 }) => {
   const disabled = !audioUrl;
   const timeDisplay = `${formatAudioTime(currentTime)} / ${formatAudioTime(duration)}`;
+  const hasLoopSelection = loopStart !== null || loopEnd !== null || isLooping;
 
   return (
     <div className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
       <div className="space-y-1">
-        <input
-          type="range"
-          min="0"
-          max={duration || 100}
-          step="0.1"
-          value={currentTime}
-          disabled={disabled}
-          onChange={(e) => onSeek(parseFloat(e.target.value))}
-          aria-label="Audio progress bar"
-          className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600 disabled:opacity-40"
-        />
+        <div className="relative w-full flex items-center">
+          <input
+            type="range"
+            min="0"
+            max={duration || 100}
+            step="0.1"
+            value={currentTime}
+            disabled={disabled}
+            onChange={(e) => onSeek(parseFloat(e.target.value))}
+            aria-label="Audio progress bar"
+            className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600 disabled:opacity-40 relative z-0"
+          />
+          {duration > 0 && loopStart !== null && (
+            <div
+              aria-hidden="true"
+              className="absolute top-1/2 -translate-y-1/2 w-1.5 h-3 bg-amber-500 dark:bg-amber-400 rounded-xs pointer-events-none shadow-xs border border-white dark:border-slate-900 z-10"
+              style={{ left: `${Math.min(100, Math.max(0, (loopStart / duration) * 100))}%` }}
+            />
+          )}
+          {duration > 0 && isLooping && loopStart !== null && loopEnd !== null && loopEnd > loopStart && (
+            <div
+              aria-hidden="true"
+              className="absolute top-1/2 -translate-y-1/2 h-1.5 bg-amber-500/40 dark:bg-amber-400/40 rounded-lg pointer-events-none"
+              style={{
+                left: `${(loopStart / duration) * 100}%`,
+                width: `${Math.min(100 - (loopStart / duration) * 100, ((loopEnd - loopStart) / duration) * 100)}%`,
+              }}
+            />
+          )}
+        </div>
         <div className="flex items-center justify-between text-xs font-mono font-medium text-slate-700 dark:text-slate-300">
           <span>{timeDisplay}</span>
-          {isLooping && loopStart !== null && loopEnd !== null && (
+          {isLooping && loopStart !== null && loopEnd !== null ? (
             <span className="text-amber-700 dark:text-amber-300 font-semibold">
               A-B Loop [{formatAudioTime(loopStart)} - {formatAudioTime(loopEnd)}]
             </span>
-          )}
+          ) : loopStart !== null && loopEnd === null ? (
+            <span className="text-amber-700 dark:text-amber-300 font-semibold">
+              A: [{formatAudioTime(loopStart)}] → Set B (or clear)
+            </span>
+          ) : null}
         </div>
       </div>
 
@@ -161,12 +185,14 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
             className={`px-2 py-1 text-xs font-semibold rounded-lg border transition-colors ${
               loopEnd !== null
                 ? 'bg-amber-100 border-amber-300 text-amber-800 dark:bg-amber-950/60 dark:border-amber-700 dark:text-amber-300'
+                : loopStart !== null
+                ? 'border-amber-400 text-amber-700 dark:text-amber-300 dark:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30'
                 : 'border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
             } disabled:opacity-40`}
           >
             B
           </button>
-          {isLooping && (
+          {hasLoopSelection && (
             <button
               type="button"
               onClick={onClearLoop}

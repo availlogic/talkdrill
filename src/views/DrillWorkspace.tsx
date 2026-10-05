@@ -100,6 +100,7 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isOverrideModalOpen || isPrintModalOpen) return;
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
 
       if (e.code === 'Space') {
         e.preventDefault();
@@ -107,7 +108,7 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
       } else if (e.code === 'KeyZ') {
         e.preventDefault();
         handleUndo();
-      } else if (e.code === 'KeyR') {
+      } else if (e.code === 'KeyP') {
         e.preventDefault();
         playerEngine.seek(loopStart ?? 0);
         playerEngine.play();
@@ -146,16 +147,31 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
     if (pt === 'A') {
       loopStartRef.current = currentTime;
       setLoopStart(currentTime);
-      if (loopEndRef.current !== null && loopEndRef.current > currentTime) {
-        playerEngine.setLoopRegion(currentTime, loopEndRef.current);
+      if (loopEndRef.current !== null) {
+        const start = Math.min(currentTime, loopEndRef.current);
+        const end = Math.max(currentTime + 0.1, loopEndRef.current);
+        loopStartRef.current = start;
+        loopEndRef.current = end;
+        setLoopStart(start);
+        setLoopEnd(end);
+        playerEngine.setLoopRegion(start, end);
         setIsLooping(true);
       }
     } else {
-      loopEndRef.current = currentTime;
-      setLoopEnd(currentTime);
-      const start = loopStartRef.current ?? 0;
-      playerEngine.setLoopRegion(start, Math.max(start + 0.1, currentTime));
-      setIsLooping(true);
+      const currentStart = loopStartRef.current;
+      if (currentStart !== null) {
+        const start = Math.min(currentStart, currentTime);
+        const end = Math.max(currentStart + 0.1, currentTime);
+        loopStartRef.current = start;
+        loopEndRef.current = end;
+        setLoopStart(start);
+        setLoopEnd(end);
+        playerEngine.setLoopRegion(start, end);
+        setIsLooping(true);
+      } else {
+        loopEndRef.current = currentTime;
+        setLoopEnd(currentTime);
+      }
     }
   }, [currentTime]);
 
