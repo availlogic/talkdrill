@@ -113,7 +113,7 @@ export const PrintExportModal: React.FC<PrintExportModalProps> = ({
           </div>
 
           <div className="p-4 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 print:border-none print:p-0">
-            <p className="print-drill-text text-lg leading-relaxed text-slate-900 dark:text-slate-100">
+            <p className="print-drill-text text-lg leading-relaxed text-slate-900 dark:text-slate-100 whitespace-pre-wrap break-words">
               {article.targetText}
             </p>
           </div>

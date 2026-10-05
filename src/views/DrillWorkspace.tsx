@@ -250,11 +250,11 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-6 flex flex-col justify-between space-y-6">
         {/* Foreign Target Corpus Display */}
         <section className="flex-1 flex flex-col justify-center items-center text-center p-6 sm:p-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm">
-          <p className="text-2xl sm:text-4xl font-serif font-medium leading-relaxed sm:leading-loose text-slate-900 dark:text-slate-50 tracking-wide select-none">
+          <p className="text-2xl sm:text-4xl font-serif font-medium leading-relaxed sm:leading-loose text-slate-900 dark:text-slate-50 tracking-wide select-none whitespace-pre-wrap break-words">
             {article.targetText}
           </p>
           {article.sourceText && !isZenMode && (
-            <p className="text-sm sm:text-base text-slate-400 dark:text-slate-500 mt-4 font-sans max-w-xl">
+            <p className="text-sm sm:text-base text-slate-400 dark:text-slate-500 mt-4 font-sans max-w-xl whitespace-pre-wrap break-words">
               {article.sourceText}
             </p>
           )}

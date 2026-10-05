@@ -35,6 +35,18 @@ describe('PrintExportModal View (TDD)', () => {
     expect(screen.getByText('Un café con leche, por favor.')).toBeDefined();
   });
 
+  it('preserves multiline whitespace in printable sheet with whitespace-pre-wrap', () => {
+    const multilineArt: Article = {
+      ...mockArticle,
+      targetText: '¡Perdona!\n\n¿Sí?\n\n¿Es tu bolso este?',
+    };
+    render(<PrintExportModal article={multilineArt} isOpen={true} onClose={vi.fn()} />);
+
+    const textEl = screen.getByText(/¡Perdona!/);
+    expect(textEl.className).toContain('whitespace-pre-wrap');
+    expect(textEl.className).toContain('break-words');
+  });
+
   it('switches between 60-box and 100-box tally sheets', () => {
     render(<PrintExportModal article={mockArticle} isOpen={true} onClose={vi.fn()} />);
 

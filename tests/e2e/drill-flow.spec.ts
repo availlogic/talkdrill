@@ -196,14 +196,14 @@ test.describe('TalkDrill E2E Journeys', () => {
     const titleInput = page.getByPlaceholder('Enter drill title (optional)');
     await titleInput.fill('Updated Lifecycle Drill');
     const textInput = page.getByPlaceholder('Enter or paste foreign text here...');
-    await textInput.fill('Updated target sentence with refinement.');
+    await textInput.fill('¡Perdona!\n\n¿Sí?\n\n¿Es tu bolso este?');
 
     // 5. Save Changes
     await page.getByRole('button', { name: 'Save Changes' }).click();
 
-    // 6. Verify DrillWorkspace updated while preserving count
+    // 6. Verify DrillWorkspace updated while preserving count and multiline whitespace
     await expect(page.getByText('Updated Lifecycle Drill')).toBeVisible();
-    await expect(page.getByText('Updated target sentence with refinement.')).toBeVisible();
+    await expect(page.locator('p.whitespace-pre-wrap').first()).toContainText('¡Perdona!\n\n¿Sí?\n\n¿Es tu bolso este?');
     await expect(page.getByRole('button', { name: 'Adjust Repetition Count' })).toContainText('3 reps');
 
     // 7. Return to Library

@@ -31,6 +31,30 @@ describe('DrillWorkspace View (TDD)', () => {
     expect(screen.getByRole('button', { name: /drill \+1/i })).toBeDefined();
   });
 
+  it('renders targetText and sourceText preserving multiline whitespace and breaks with whitespace-pre-wrap', async () => {
+    const multilineArt = await corpusService.createArticle({
+      title: 'Dialogue Drill',
+      sourceText: 'Excuse me!\n\nYes?\n\nIs this your handbag?',
+      targetText: '¡Perdona!\n\n¿Sí?\n\n¿Es tu bolso este?',
+      sourceLang: 'en-US',
+      targetLang: 'es-ES',
+      mode: 'translate_needed',
+      targetCount: 500,
+    });
+
+    render(<DrillWorkspace articleId={multilineArt.id} onBack={vi.fn()} />);
+
+    const targetEl = await screen.findByText(/¡Perdona!/);
+    expect(targetEl.className).toContain('whitespace-pre-wrap');
+    expect(targetEl.className).toContain('break-words');
+    expect(targetEl.textContent).toContain('¡Perdona!\n\n¿Sí?\n\n¿Es tu bolso este?');
+
+    const sourceEl = screen.getByText(/Excuse me!/);
+    expect(sourceEl.className).toContain('whitespace-pre-wrap');
+    expect(sourceEl.className).toContain('break-words');
+    expect(sourceEl.textContent).toContain('Excuse me!\n\nYes?\n\nIs this your handbag?');
+  });
+
   it('increments count on primary capsule button click', async () => {
     render(<DrillWorkspace articleId={articleId} onBack={vi.fn()} />);
 
