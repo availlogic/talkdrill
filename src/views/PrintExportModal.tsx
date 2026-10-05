@@ -106,7 +106,7 @@ export const PrintExportModal: React.FC<PrintExportModalProps> = ({
         </div>
 
         {/* Paper Sheet Preview Area */}
-        <div className="printable-sheet p-6 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-950 font-serif space-y-4 max-h-[420px] overflow-y-auto print:max-h-none print:overflow-visible print:border-none print:p-0 print:m-0 print:bg-transparent">
+        <div className="printable-sheet p-6 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-950 font-serif space-y-4 max-h-[420px] overflow-y-auto print:max-h-none print:overflow-visible print:border-none print:bg-transparent">
           <div>
             <h4 className="print-drill-title text-xl font-bold text-slate-900 dark:text-slate-100 text-center">
               {article.title}
@@ -123,7 +123,7 @@ export const PrintExportModal: React.FC<PrintExportModalProps> = ({
             <h5 className="no-print print:hidden text-xs font-sans font-semibold text-slate-500 mb-2">
               Tally Sheet ({tallyBoxes} boxes, 5 reps per box):
             </h5>
-            <div className="print-tally-grid grid grid-cols-10 gap-1.5">
+            <div className="print-tally-grid grid grid-cols-20 justify-between gap-1">
               {boxIndices.map((i) => (
                 <div
                   key={i}

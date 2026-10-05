@@ -3,7 +3,7 @@
 @media print {
   @page {
     size: A4 portrait;
-    margin: 15mm 20mm;
+    margin: 0;
   }
 
   body {
@@ -62,14 +62,16 @@
     overflow: visible !important;
   }
 
-  /* Printable sheet container */
+  /* Printable sheet container with consistent page margins */
   .printable-sheet {
+    box-sizing: border-box !important;
     display: block !important;
     width: 100% !important;
+    max-width: 210mm !important;
+    padding: 18mm 15.5mm !important;
+    margin: 0 auto !important;
     max-height: none !important;
     overflow: visible !important;
-    margin: 0 !important;
-    padding: 0 !important;
     border: none !important;
     background: transparent !important;
     page-break-inside: auto;
@@ -100,29 +102,31 @@
     white-space: pre-wrap !important;
   }
 
-  /* Compact Tally Grid: 10 columns, 6.2mm cells, 1.5mm gap */
+  /* 20-column Tally Grid evenly distributed across the available horizontal space */
   .print-tally-grid {
     display: grid !important;
-    grid-template-columns: repeat(10, 6.2mm) !important;
-    gap: 1.5mm !important;
+    grid-template-columns: repeat(20, 8mm) !important;
+    justify-content: space-between !important;
+    row-gap: 2mm !important;
+    width: 100% !important;
     page-break-inside: avoid;
     break-inside: avoid;
-    margin-top: 12pt !important;
+    margin-top: 14pt !important;
   }
 
-  /* 6mm small square tally box with fine dashed gray border */
+  /* 8mm small square tally box with fine dashed gray border */
   .print-tally-box {
-    width: 6.2mm !important;
-    height: 6.2mm !important;
-    min-width: 6.2mm !important;
-    min-height: 6.2mm !important;
+    width: 8mm !important;
+    height: 8mm !important;
+    min-width: 8mm !important;
+    min-height: 8mm !important;
     aspect-ratio: 1 / 1 !important;
     border: 0.5pt dashed #94a3b8 !important;
-    border-radius: 1pt !important;
+    border-radius: 1.5pt !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    font-size: 6pt !important;
+    font-size: 6.5pt !important;
     color: #94a3b8 !important;
     box-sizing: border-box !important;
   }

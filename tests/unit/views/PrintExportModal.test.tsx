@@ -112,10 +112,16 @@ describe('PrintExportModal View (TDD)', () => {
     expect(sheetEl?.className).toContain('print:max-h-none');
     expect(sheetEl?.className).toContain('print:overflow-visible');
     expect(sheetEl?.className).toContain('print:border-none');
+    // Ensure zero padding is not hardcoded on print, preserving paper margins
+    expect(sheetEl?.className).not.toContain('print:p-0');
   });
 
-  it('renders dashed-border tally boxes for both 60 and 100 boxes', () => {
+  it('renders dashed-border tally boxes evenly distributed with 20 columns for both 60 and 100 boxes', () => {
     const { container } = render(<PrintExportModal article={mockArticle} isOpen={true} onClose={vi.fn()} />);
+
+    const gridEl = container.querySelector('.print-tally-grid');
+    expect(gridEl?.className).toContain('grid-cols-20');
+    expect(gridEl?.className).toContain('justify-between');
 
     const boxes100 = container.querySelectorAll('.print-tally-box');
     expect(boxes100.length).toBe(100);
@@ -128,4 +134,5 @@ describe('PrintExportModal View (TDD)', () => {
     expect(boxes60.length).toBe(60);
   });
 });
+
 

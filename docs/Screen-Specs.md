@@ -179,9 +179,10 @@
 ### 5.3 Print Media Query (`@media print`) 规范
 - **元素隐藏**：自动隐去所有 Web 导航头、侧边栏、播放控件、按钮、弹窗遮罩与工具栏说明文本（纯净保留外语标题、正文与打卡网格三大块）。
 - **排版规格**：
+  - 页边距保护：页面统一设置 18mm 垂直边距与 15.5mm 水平页边距，外语正文与打卡方格区域在左右两侧维持严格一致的页边距对齐，杜绝贴边。
   - 外语标题 (Title/Subject)：页面居中 (`text-align: center`)，加粗，默认纯黑色。
   - 正文字号与行高：固定为 `16pt`，正文字体为衬线或高质量人文无衬线体，保持 `whitespace-pre-wrap break-words` 换行结构；文本行高固定为宽松的 `2.5`，在行间留足整整一行空白，供用户手工标注国际音标（IPA）、连读升降调符号或笔记。
-  - 页面下边缘 Tally Boxes：紧密排列 10 列整齐的微缩正方形方格（60 格或 100 格），每格边长约 6mm x 6mm，边框采用细虚线浅灰色（0.5pt dashed #94a3b8），内部标记微缩浅灰色编号，具备 `page-break-inside: avoid; break-inside: avoid` 防断页切半保护。
+  - 页面下边缘 Tally Boxes：在横向可用空间中水平均匀分布（`justify-content: space-between`）排列 20 列微缩正方形方格（500 reps 共 5 行 100 格；300 reps 共 3 行 60 格），每格边长约 8mm x 8mm，边框采用细虚线浅灰色（0.5pt dashed #94a3b8），内部标记微缩浅灰色编号，具备 `page-break-inside: avoid; break-inside: avoid` 防断页切半保护。
 
 ### 5.4 Navigation
 - 点击关闭按钮或背景遮罩 -> 返回 Screen 3: Drill Workspace。
