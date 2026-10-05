@@ -11,6 +11,50 @@ export interface LibraryOverviewProps {
   onEditArticle?: (id: string) => void;
 }
 
+const EMPTY_ARCHIVED_INFO = {
+  icon: Archive,
+  title: 'No Archived Drills',
+  desc: 'Completed or paused drills that you archive will appear here. You can restore them to active at any time.',
+  badgeCls: 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200/80 dark:border-slate-700',
+};
+
+const EMPTY_ACTIVE_INFO = {
+  icon: Sparkles,
+  title: 'No Shadowing Drills Yet',
+  desc: 'Import foreign text or draft ideas, and generate spoken native audio for muscle memory overlearning.',
+  badgeCls: 'bg-blue-50 dark:bg-blue-950/70 text-blue-600 dark:text-blue-400 border-blue-200/80 dark:border-blue-800/80',
+};
+
+const EmptyState: React.FC<{ isArchived: boolean; onNewArticle: () => void }> = ({
+  isArchived,
+  onNewArticle,
+}) => {
+  const info = isArchived ? EMPTY_ARCHIVED_INFO : EMPTY_ACTIVE_INFO;
+  const Icon = info.icon;
+  return (
+    <div className="p-12 text-center border-2 border-dashed border-slate-300 dark:border-slate-800 bg-white/50 dark:bg-slate-900/40 rounded-2xl space-y-4">
+      <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto shadow-xs border ${info.badgeCls}`}>
+        <Icon className="w-8 h-8" />
+      </div>
+      <div>
+        <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">{info.title}</h3>
+        <p className="text-xs font-medium text-slate-600 dark:text-slate-400 max-w-sm mx-auto mt-1">{info.desc}</p>
+      </div>
+      {!isArchived && (
+        <button
+          type="button"
+          onClick={onNewArticle}
+          aria-label="Create First Drill"
+          className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl inline-flex items-center gap-1.5 shadow-md shadow-blue-500/25 transition-transform active:scale-95"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Create First Drill</span>
+        </button>
+      )}
+    </div>
+  );
+};
+
 export const LibraryOverview: React.FC<LibraryOverviewProps> = ({
   onSelectArticle,
   onNewArticle,
@@ -137,26 +181,7 @@ export const LibraryOverview: React.FC<LibraryOverviewProps> = ({
 
       {/* Cards List or Empty State */}
       {articles.length === 0 && !loading ? (
-        <div className="p-12 text-center border-2 border-dashed border-slate-300 dark:border-slate-800 bg-white/50 dark:bg-slate-900/40 rounded-2xl space-y-4">
-          <div className="w-16 h-16 bg-blue-50 dark:bg-blue-950/70 text-blue-600 dark:text-blue-400 border border-blue-200/80 dark:border-blue-800/80 rounded-full flex items-center justify-center mx-auto shadow-xs">
-            <Sparkles className="w-8 h-8" />
-          </div>
-          <div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">No Shadowing Drills Yet</h3>
-            <p className="text-xs font-medium text-slate-600 dark:text-slate-400 max-w-sm mx-auto mt-1">
-              Import foreign text or draft ideas, and generate spoken native audio for muscle memory overlearning.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onNewArticle}
-            aria-label="Create First Drill"
-            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl inline-flex items-center gap-1.5 shadow-md shadow-blue-500/25 transition-transform active:scale-95"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Create First Drill</span>
-          </button>
-        </div>
+        <EmptyState isArchived={showArchived} onNewArticle={onNewArticle} />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {articles.map((art) => {

@@ -18,6 +18,19 @@ describe('LibraryOverview View (TDD)', () => {
     expect(screen.getByRole('button', { name: 'Create First Drill' })).toBeDefined();
   });
 
+  it('renders dedicated empty state in Archived tab without Create First Drill button', async () => {
+    render(<LibraryOverview onSelectArticle={vi.fn()} onNewArticle={vi.fn()} onOpenSettings={vi.fn()} />);
+
+    // Switch to Archived tab
+    const archivedTab = await screen.findByRole('button', { name: 'Archived' });
+    fireEvent.click(archivedTab);
+
+    expect(await screen.findByText('No Archived Drills')).toBeDefined();
+    expect(screen.getByText(/Completed or paused drills that you archive will appear here/i)).toBeDefined();
+    expect(screen.queryByRole('button', { name: /create first drill/i })).toBeNull();
+    expect(screen.queryByText('No Shadowing Drills Yet')).toBeNull();
+  });
+
   it('renders list of article cards with progress and language tags', async () => {
     await corpusService.createArticle({
       title: 'Restaurante en Madrid',

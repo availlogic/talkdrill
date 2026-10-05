@@ -42,7 +42,9 @@
 
 ### 2.5 Screen States
 - **Loading State**：骨架屏卡片脉冲加载（通常 < 50ms）。
-- **Empty State**：居中展示极简插画，文案：“暂无跟读篇目，立即粘贴一段外语开启肌肉记忆突破”，提供大号“新建第一篇”按钮。
+- **Empty State**：
+  - **Active 视图为空**：展示 Sparkles 极简图标、"No Shadowing Drills Yet" 引导文案及 "+ Create First Drill" CTA 按键。
+  - **Archived 视图为空**：展示 Archive 归档图标、"No Archived Drills" 说明文案（不展示创建按键，因新建篇目默认进入 Active 区域）。
 - **Populated State**：卡片按最后练习时间（`lastPracticedAt`）降序整齐排列。
 - **Offline State**：完全正常展示，右上角展示“离线就绪”图标。
 

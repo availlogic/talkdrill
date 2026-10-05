@@ -214,6 +214,8 @@ test.describe('TalkDrill E2E Journeys', () => {
     // 10. Restore the drill from card
     await page.getByRole('button', { name: 'Restore Updated Lifecycle Drill' }).click();
     await expect(page.getByText('Updated Lifecycle Drill')).not.toBeVisible();
+    await expect(page.getByText('No Archived Drills')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Create First Drill' })).not.toBeVisible();
 
     // 11. Switch back to Active tab and verify drill restored with count intact
     await page.getByRole('button', { name: 'Active' }).click();

@@ -189,5 +189,5 @@ npx wrangler pages deploy dist --project-name talkdrill
    - 保存时保留原有的打卡历史（`currentCount` 与 `drillLogs`），避免由于细微拼写或表述调整而从零重新建立篇目。
 2. **归档与还原 (Archive & Restore)**：
    - 在篇目卡片或 DrillWorkspace 顶部点击 "Archive" 按钮，可将已完成或暂停练习的篇目移至 "Archived" 标签页。
-   - "Archived" 标签页仅展示已归档篇目；点击卡片或工作台上的 "Restore" 按钮，可随时一键将篇目移回 "Active" 继续练习。
+   - "Archived" 标签页仅展示已归档篇目；当归档列表为空时呈现专属空状态，且不展示新建入口（新建篇目统一进入活跃区域）。点击卡片或工作台上的 "Restore" 按钮，可随时一键将篇目移回 "Active" 继续练习。
    - 点击卡片上的删除按钮（垃圾桶图标）执行永久硬删除，并级联清除所有绑定的音频与打卡历史。
