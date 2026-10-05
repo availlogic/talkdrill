@@ -10,6 +10,8 @@ import { BigDrillCapsule } from '../components/BigDrillCapsule';
 import { AudioPlayerBar } from '../components/AudioPlayerBar';
 import { NumericOverrideModal } from '../components/NumericOverrideModal';
 import { PrintExportModal } from '../views/PrintExportModal';
+import { WordLookupPopover } from '../components/WordLookupPopover';
+import { useWordLookup } from '../hooks/useWordLookup';
 import { type Article, type MilestoneResult, type PlayerState } from '../types/models';
 
 export interface DrillWorkspaceProps {
@@ -20,9 +22,10 @@ export interface DrillWorkspaceProps {
 
 interface ParagraphListProps {
   paragraphs: AlignedParagraph[];
+  onTargetMouseUp?: () => void;
 }
 
-export const BilingualParagraphList: React.FC<ParagraphListProps> = ({ paragraphs }) => {
+export const BilingualParagraphList: React.FC<ParagraphListProps> = ({ paragraphs, onTargetMouseUp }) => {
   const isMulti = paragraphs.length > 1;
   const targetClasses = isMulti
     ? 'text-xl sm:text-3xl font-serif font-medium leading-relaxed text-slate-900 dark:text-slate-50 tracking-wide select-text cursor-text whitespace-pre-wrap break-words'
@@ -35,13 +38,18 @@ export const BilingualParagraphList: React.FC<ParagraphListProps> = ({ paragraph
     <div className="w-full max-w-3xl space-y-6 sm:space-y-8">
       {paragraphs.map((pair, idx) => (
         <div key={idx} className="space-y-1.5 sm:space-y-2">
-          {pair.target && <p className={targetClasses}>{pair.target}</p>}
+          {pair.target && (
+            <p onMouseUp={onTargetMouseUp} className={targetClasses}>
+              {pair.target}
+            </p>
+          )}
           {pair.source && <p className={sourceClasses}>{pair.source}</p>}
         </div>
       ))}
     </div>
   );
 };
+
 
 export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBack, onEdit }) => {
   const [article, setArticle] = useState<Article | null>(null);
@@ -50,6 +58,14 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
   const [isOverrideModalOpen, setIsOverrideModalOpen] = useState(false);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [activeMilestone, setActiveMilestone] = useState<MilestoneResult | null>(null);
+
+  const { lookupState, handleSelectionLookup, closeLookup } = useWordLookup();
+
+  const handleTargetMouseUp = useCallback(() => {
+    if (article) {
+      handleSelectionLookup(article.targetLang);
+    }
+  }, [article, handleSelectionLookup]);
 
   // Audio player state
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -132,14 +148,16 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
   }, [articleId, handlePlayerStateUpdate, resetLoopState]);
 
   const handleIncrement = useCallback(() => {
+    closeLookup();
     const next = drillCounterService.increment(articleId);
     setCurrentCount(next);
-  }, [articleId]);
+  }, [articleId, closeLookup]);
 
   const handleUndo = useCallback(() => {
+    closeLookup();
     const next = drillCounterService.undo(articleId);
     setCurrentCount(next);
-  }, [articleId]);
+  }, [articleId, closeLookup]);
 
   // Keyboard shortcut handler
   useEffect(() => {
@@ -258,14 +276,18 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
     return (
       <section className="flex-1 flex flex-col justify-center items-center text-center p-6 sm:p-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm">
         {showInterleaved ? (
-          <BilingualParagraphList paragraphs={alignedParagraphs} />
+          <BilingualParagraphList paragraphs={alignedParagraphs} onTargetMouseUp={handleTargetMouseUp} />
         ) : (
-          <p className="text-2xl sm:text-4xl font-serif font-medium leading-relaxed sm:leading-loose text-slate-900 dark:text-slate-50 tracking-wide select-text cursor-text whitespace-pre-wrap break-words">
+          <p
+            onMouseUp={handleTargetMouseUp}
+            className="text-2xl sm:text-4xl font-serif font-medium leading-relaxed sm:leading-loose text-slate-900 dark:text-slate-50 tracking-wide select-text cursor-text whitespace-pre-wrap break-words"
+          >
             {article.targetText}
           </p>
         )}
       </section>
     );
+
   };
 
   if (!article) {
@@ -443,6 +465,20 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
         isOpen={isPrintModalOpen}
         onClose={() => setIsPrintModalOpen(false)}
       />
+
+      {lookupState.isOpen && (
+        <WordLookupPopover
+          word={lookupState.word}
+          lang={lookupState.lang}
+          x={lookupState.x}
+          y={lookupState.y}
+          loading={lookupState.loading}
+          result={lookupState.result}
+          error={lookupState.error}
+          onClose={closeLookup}
+        />
+      )}
     </div>
   );
+
 };

@@ -331,4 +331,44 @@ describe('DrillWorkspace View (TDD)', () => {
     art = await corpusService.getArticle(articleId);
     expect(art?.isArchived).toBe(false);
   });
+
+  it('opens WordLookupPopover on target text selection and closes when drilling', async () => {
+    await db.wordLookups.add({
+      text: 'cobras',
+      lang: 'es-ES',
+      ipa: '/ˈko.βɾas/',
+      partOfSpeech: 'verb',
+      translation: 'charge / collect payment',
+      contextNote: 'Informal present',
+      timestamp: Date.now(),
+    });
+
+    const mockRange = {
+      getBoundingClientRect: () => ({ left: 200, bottom: 300 }),
+    };
+    vi.spyOn(window, 'getSelection').mockReturnValue({
+      rangeCount: 1,
+      isCollapsed: false,
+      toString: () => 'cobras',
+      getRangeAt: () => mockRange,
+    } as unknown as Selection);
+
+    render(<DrillWorkspace articleId={articleId} onBack={vi.fn()} />);
+
+    const targetEl = await screen.findByText('¿Nos cobras, por favor?');
+    fireEvent.mouseUp(targetEl);
+
+    // Popover dialog opens and displays cached definition
+    expect(await screen.findByRole('dialog')).toBeDefined();
+    expect(await screen.findByText('/ˈko.βɾas/')).toBeDefined();
+    expect(await screen.findByText('charge / collect payment')).toBeDefined();
+
+    // Now user continues drilling by clicking BigDrillCapsule
+    const drillCapsuleBtn = screen.getByRole('button', { name: /drill \+1/i });
+    fireEvent.click(drillCapsuleBtn);
+
+    // Popover automatically dismisses
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
 });
+

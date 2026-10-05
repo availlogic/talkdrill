@@ -61,11 +61,12 @@ export class SettingsService {
   }
 
   async clearAllLocalData(): Promise<void> {
-    await db.transaction('rw', [db.articles, db.audios, db.drillLogs, db.settings], async () => {
+    await db.transaction('rw', [db.articles, db.audios, db.drillLogs, db.settings, db.wordLookups], async () => {
       await db.articles.clear();
       await db.audios.clear();
       await db.drillLogs.clear();
       await db.settings.clear();
+      await db.wordLookups.clear();
     });
   }
 }

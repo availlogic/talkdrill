@@ -31,15 +31,17 @@ TalkDrill 专为高频肌肉记忆特训而生：
   ├── drillCounterService (微秒级内存计数 + 150ms 防抖批处理持久化)
   ├── playerEngine (原生 HTMLAudio 引擎，音调保持变速 0.5x-1.5x，A-B 精确复读)
   ├── translationService (Anthropic BYOK 地道口语翻译服务)
+  ├── dictionaryService (词汇与短语释义查询，离线 IndexedDB 缓存与 Anthropic BYOK 双轨支持)
   ├── audioService (本地与外部生成音频 <= 50MB 上传校验 / 原生 Blob 持久化 / 文件导出)
   └── printExportService (纯函数 60/100 格打卡表与 Markdown 渲染)
          │
 [Core Utils & Storage]
   ├── textAlignment (纯函数双语段落与单行对话智能对齐匹配)
+  ├── speechHelper (浏览器原生 Web Speech API 语音合成与标准发音)
   ├── zhengMath (纯函数正字笔画计算与阶段里程碑判定：50/150/300/500 遍)
   ├── audioContextManager (用户手势即时解锁浏览器 AudioContext)
   ├── storageQuota (StorageManager API 存储配额与持久化检查)
-  └── Dexie IndexedDB (talkdrill_db: articles, audios, drillLogs, settings)
+  └── Dexie IndexedDB (talkdrill_db: articles, audios, drillLogs, settings, wordLookups)
 ```
 
 ---
@@ -64,8 +66,12 @@ TalkDrill 专为高频肌肉记忆特训而生：
    - 消除低对比度与刺眼失衡缺陷，正文标题对比度高达 16.5:1 (Light) 与 19.8:1 (Dark)，存储徽章等组件对比度 > 9:1，完全超越 WCAG AAA 顶级标准。
 7. **标准 BCP-47 规范区域语言标识 (Standard BCP-47 Canonical Locales)**：
    - 篇目卡片与特训工作区标签严格展示标准 BCP-47 规范（如 `es-ES`, `en-US`, `ja-JP` 等小写语言代码与大写地区代码组合），保持国际标准语义严谨性与直观认知。
+8. **智能划词与发音释义 (Instant Word Lookup with Phonetics & Audio)**：
+   - 特训空间内任意划选外语单词或短语，毫秒级弹出沉浸浮窗，展示标准国际音标（IPA）、词性与精炼英文释义。
+   - 集成浏览器原生 Web Speech API 扬声器发音朗读，完全支持离线本地缓存，并与特训节奏智能联动（跟读打卡时自动收起浮窗避免遮挡）。
 
 ---
+
 
 ## 4. 构建与环境配置 (Build Instructions)
 

@@ -230,4 +230,74 @@ test.describe('TalkDrill E2E Journeys', () => {
     await expect(page.getByText('Updated Lifecycle Drill')).toBeVisible();
     await expect(page.getByText('3 / 500 reps')).toBeVisible();
   });
+
+  test('E2E-SCN-003: Foreign Word Selection and Definition Lookup Flow', async ({ page }) => {
+    // 1. Create drill with foreign text
+    await page.getByRole('button', { name: 'Create First Drill' }).click();
+    await page.getByRole('button', { name: 'Direct Foreign Text' }).click();
+    await page.getByPlaceholder('Enter drill title (optional)').fill('Restaurant Dialogue');
+    await page.getByPlaceholder('Enter or paste foreign text here...').fill('¿Nos cobras, por favor?');
+    await page.getByRole('button', { name: 'Save and Start Drill' }).click();
+
+    await expect(page.getByText('Restaurant Dialogue')).toBeVisible();
+    await expect(page.getByText('¿Nos cobras, por favor?')).toBeVisible();
+
+    // 2. Seed cached word lookup in IndexedDB
+    await page.evaluate(async () => {
+      return new Promise<void>((resolve, reject) => {
+        const req = indexedDB.open('TalkDrillDB');
+        req.onsuccess = () => {
+          const idb = req.result;
+          const tx = idb.transaction('wordLookups', 'readwrite');
+          const store = tx.objectStore('wordLookups');
+          store.put({
+            text: 'cobras',
+            lang: 'es-ES',
+            ipa: '/ˈko.βɾas/',
+            partOfSpeech: 'verb',
+            translation: 'to charge / collect payment',
+            contextNote: 'Informal present indicative',
+            timestamp: Date.now(),
+          });
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+        };
+        req.onerror = () => reject(req.error);
+      });
+    });
+
+    // 3. Trigger text selection on 'cobras'
+    await page.evaluate(() => {
+      const targetEl = document.querySelector('p.select-text');
+      if (targetEl && targetEl.firstChild) {
+        const range = document.createRange();
+        // Select 'cobras' (characters 5 to 11 in '¿Nos cobras, por favor?')
+        range.setStart(targetEl.firstChild, 5);
+        range.setEnd(targetEl.firstChild, 11);
+        const sel = window.getSelection();
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+        targetEl.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+      }
+    });
+
+    // 4. Verify WordLookupPopover is rendered with IPA, translation, and Cached badge
+    const dialog = page.getByRole('dialog', { name: 'Word Definition' });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByText('cobras')).toBeVisible();
+    await expect(dialog.getByText('/ˈko.βɾas/')).toBeVisible();
+    await expect(dialog.getByText('to charge / collect payment')).toBeVisible();
+    await expect(dialog.getByText('Cached')).toBeVisible();
+
+    // 5. Test audio pronunciation speaker button
+    const speakerBtn = dialog.getByRole('button', { name: 'Listen to pronunciation' });
+    await expect(speakerBtn).toBeVisible();
+    await speakerBtn.click();
+
+    // 6. Dismiss popover upon clicking Drill +1 capsule
+    const drillCapsuleBtn = page.getByRole('button', { name: 'Drill +1' });
+    await drillCapsuleBtn.click();
+    await expect(dialog).not.toBeVisible();
+  });
 });
+

@@ -7,6 +7,7 @@ describe('TalkDrillDatabase & Storage Layer', () => {
     await db.audios.clear();
     await db.drillLogs.clear();
     await db.settings.clear();
+    await db.wordLookups.clear();
   });
 
   it('initializes tables with correct schema', () => {
@@ -15,6 +16,7 @@ describe('TalkDrillDatabase & Storage Layer', () => {
     expect(db.audios).toBeDefined();
     expect(db.drillLogs).toBeDefined();
     expect(db.settings).toBeDefined();
+    expect(db.wordLookups).toBeDefined();
   });
 
   it('can create, retrieve and query articles', async () => {

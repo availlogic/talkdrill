@@ -12,7 +12,10 @@
     "src/utils/themeManager.ts",
     "src/services/translationService.ts",
     "src/utils/urlHelper.ts",
-    "src/utils/textAlignment.ts"
+    "src/utils/textAlignment.ts",
+    "src/utils/speechHelper.ts",
+    "src/services/dictionaryService.ts",
+    "src/hooks/useWordLookup.ts"
   ],
   "thresholds": {
     "high": 90,

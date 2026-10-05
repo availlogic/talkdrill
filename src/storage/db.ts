@@ -2,6 +2,7 @@ import Dexie, { type EntityTable } from 'dexie';
 import {
   type LanguageMode,
   type AppSettings,
+  type WordLookupRecord,
 } from '../types/models';
 
 export interface ArticleRecord {
@@ -52,6 +53,7 @@ export class TalkDrillDatabase extends Dexie {
   audios!: EntityTable<AudioRecord, 'id'>;
   drillLogs!: EntityTable<DrillLogRecord, 'id'>;
   settings!: EntityTable<SettingsRecord, 'key'>;
+  wordLookups!: EntityTable<WordLookupRecord, 'id'>;
 
   constructor() {
     super('TalkDrillDB');
@@ -61,6 +63,7 @@ export class TalkDrillDatabase extends Dexie {
       audios: 'id, articleId',
       drillLogs: '++id, articleId, timestamp',
       settings: 'key',
+      wordLookups: '++id, [lang+text], timestamp',
     });
   }
 

@@ -91,3 +91,20 @@ export interface PlayerState {
   loopRegion: LoopRegion | null;
   isAudioUnlocked: boolean;
 }
+
+export interface WordLookupResult {
+  text: string;
+  lang: string;
+  ipa?: string | undefined;
+  partOfSpeech?: string | undefined;
+  translation: string;
+  contextNote?: string | undefined;
+  source?: 'cache' | 'api' | 'fallback' | undefined;
+}
+
+
+export interface WordLookupRecord extends WordLookupResult {
+  id?: number | undefined;
+  timestamp: number;
+}
+
