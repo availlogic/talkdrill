@@ -508,5 +508,104 @@ describe('DrillWorkspace View (TDD)', () => {
     expect(spoken.voice).toEqual(dummyVoices[0]);
     expect(spoken.text).toBe('cobras');
   });
+
+  it('toggles Focus mode with F key and exits with Escape key', async () => {
+    render(<DrillWorkspace articleId={articleId} onBack={vi.fn()} />);
+    await screen.findByText('¿Nos cobras, por favor?');
+
+    expect(screen.getByRole('button', { name: /focus mode/i })).toBeDefined();
+
+    // Press F to enter Focus mode
+    fireEvent.keyDown(window, { code: 'KeyF', key: 'f' });
+    expect(screen.getByRole('button', { name: /exit focus/i })).toBeDefined();
+
+    // Press F again to exit Focus mode
+    fireEvent.keyDown(window, { code: 'KeyF', key: 'f' });
+    expect(screen.getByRole('button', { name: /focus mode/i })).toBeDefined();
+
+    // Press F to enter, then Escape to exit Focus mode
+    fireEvent.keyDown(window, { code: 'KeyF', key: 'f' });
+    expect(screen.getByRole('button', { name: /exit focus/i })).toBeDefined();
+
+    fireEvent.keyDown(window, { code: 'Escape', key: 'Escape' });
+    expect(screen.getByRole('button', { name: /focus mode/i })).toBeDefined();
+  });
+
+  it('handles audio play (P), pause (S), resume (P) state machine, and ignores S when not playing', async () => {
+    await db.audios.add({
+      id: 'audio-art-state-machine',
+      articleId,
+      blob: new Blob(['mock-audio'], { type: 'audio/mpeg' }),
+      mimeType: 'audio/mpeg',
+      fileName: 'mock.mp3',
+      fileSize: 100,
+      duration: 30,
+      sourceType: 'upload',
+      createdAt: Date.now(),
+    });
+
+    render(<DrillWorkspace articleId={articleId} onBack={vi.fn()} />);
+    await screen.findByText('¿Nos cobras, por favor?');
+
+    const playSpy = vi.spyOn(playerEngine, 'play');
+    const pauseSpy = vi.spyOn(playerEngine, 'pause');
+    const seekSpy = vi.spyOn(playerEngine, 'seek');
+
+    // 1. Audio not playing: Pressing S should be a NO-OP (pause not called)
+    fireEvent.keyDown(window, { code: 'KeyS', key: 's' });
+    expect(pauseSpy).not.toHaveBeenCalled();
+
+    // 2. Press P to start playing audio
+    fireEvent.keyDown(window, { code: 'KeyP', key: 'p' });
+    expect(seekSpy).toHaveBeenCalledWith(0);
+    expect(playSpy).toHaveBeenCalledTimes(1);
+
+    // 3. Audio is now playing: Press S to pause audio
+    fireEvent.keyDown(window, { code: 'KeyS', key: 's' });
+    expect(pauseSpy).toHaveBeenCalledTimes(1);
+
+    // 4. Audio is paused: Press S again should be a NO-OP
+    fireEvent.keyDown(window, { code: 'KeyS', key: 's' });
+    expect(pauseSpy).toHaveBeenCalledTimes(1);
+
+    // 5. Audio is paused: Press P to resume playing (must NOT seek back to 0)
+    seekSpy.mockClear();
+    fireEvent.keyDown(window, { code: 'KeyP', key: 'p' });
+    expect(seekSpy).not.toHaveBeenCalled();
+    expect(playSpy).toHaveBeenCalledTimes(2);
+
+    playSpy.mockRestore();
+    pauseSpy.mockRestore();
+    seekSpy.mockRestore();
+  });
+
+  it('opens and closes keyboard shortcuts modal via button and ? shortcut, and renders discovery hint', async () => {
+    render(<DrillWorkspace articleId={articleId} onBack={vi.fn()} />);
+    await screen.findByText('¿Nos cobras, por favor?');
+
+    // Header shortcut button exists in non-focus mode
+    const shortcutsBtn = screen.getByRole('button', { name: /keyboard shortcuts/i });
+    expect(shortcutsBtn).toBeDefined();
+
+    // Bottom discovery hint exists
+    expect(screen.getByText(/for keyboard shortcuts/i)).toBeDefined();
+
+    // Click button to open modal
+    fireEvent.click(shortcutsBtn);
+    expect(screen.getByRole('dialog', { name: /keyboard shortcuts/i })).toBeDefined();
+
+    // Press Escape to close modal
+    fireEvent.keyDown(window, { code: 'Escape', key: 'Escape' });
+    expect(screen.queryByRole('dialog', { name: /keyboard shortcuts/i })).toBeNull();
+
+    // Press ? (question mark) to open modal
+    fireEvent.keyDown(window, { code: 'Slash', key: '?', shiftKey: true });
+    expect(screen.getByRole('dialog', { name: /keyboard shortcuts/i })).toBeDefined();
+
+    // Close via close button in modal
+    fireEvent.click(screen.getByRole('button', { name: /close shortcuts/i }));
+    expect(screen.queryByRole('dialog', { name: /keyboard shortcuts/i })).toBeNull();
+  });
 });
+
 

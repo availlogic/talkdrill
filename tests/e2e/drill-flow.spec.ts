@@ -363,5 +363,65 @@ test.describe('TalkDrill E2E Journeys', () => {
       dialog.getByText('Configure Anthropic API Key in Settings for AI definitions.')
     ).toBeVisible();
   });
+
+  test('E2E-SCN-008: Drill Keyboard Shortcuts Cheatsheet, Focus Toggle & Viewport Responsiveness', async ({ page }) => {
+    // 1. Create a new drill article
+    await page.getByRole('button', { name: 'Create First Drill' }).click();
+    await page.getByRole('button', { name: 'Direct Foreign Text' }).click();
+    await page.getByPlaceholder('Enter drill title (optional)').fill('Shortcuts E2E Drill');
+    await page.getByPlaceholder('Enter or paste foreign text here...').fill('Bonjour tout le monde!');
+    await page.getByRole('button', { name: 'Save and Start Drill' }).click();
+
+    await expect(page.getByText('Shortcuts E2E Drill')).toBeVisible();
+
+    const viewport = page.viewportSize();
+    const isMobileViewport = (viewport?.width ?? 1440) < 640;
+
+    if (isMobileViewport) {
+      // In Mobile Chrome viewport (< 640px): Shortcuts button and bottom hint MUST be hidden
+      await expect(page.getByRole('button', { name: 'Keyboard Shortcuts' })).not.toBeVisible();
+      await expect(page.getByText('for keyboard shortcuts')).not.toBeVisible();
+    } else {
+      // 2. Desktop: Verify Shortcuts button and Discovery Hint are visible
+      const shortcutsBtn = page.getByRole('button', { name: 'Keyboard Shortcuts' });
+      await expect(shortcutsBtn).toBeVisible();
+      const discoveryHint = page.getByText('for keyboard shortcuts');
+      await expect(discoveryHint).toBeVisible();
+
+      // 3. Open Cheatsheet via Header button
+      await shortcutsBtn.click();
+      const shortcutsModal = page.getByRole('dialog', { name: 'Keyboard Shortcuts' });
+      await expect(shortcutsModal).toBeVisible();
+      await expect(shortcutsModal.getByText('Drill +1 rep')).toBeVisible();
+      await expect(shortcutsModal.getByText('Toggle Focus mode')).toBeVisible();
+      await expect(shortcutsModal.getByText('Pause audio (when playing)')).toBeVisible();
+
+      // 4. Close Cheatsheet via Escape key
+      await page.keyboard.press('Escape');
+      await expect(shortcutsModal).not.toBeVisible();
+
+      // 5. Open Cheatsheet via '?' key (Shift+Slash)
+      await page.keyboard.press('Shift+Slash');
+      await expect(shortcutsModal).toBeVisible();
+
+      // 6. Close Cheatsheet via Close button
+      await page.getByRole('button', { name: 'Close shortcuts' }).click();
+      await expect(shortcutsModal).not.toBeVisible();
+
+      // 7. Focus Mode toggle via 'F' key
+      await page.keyboard.press('KeyF');
+      await expect(page.getByRole('button', { name: 'Exit Focus' })).toBeVisible();
+
+      // Exit Focus Mode via 'F' key
+      await page.keyboard.press('KeyF');
+      await expect(page.getByRole('button', { name: 'Focus Mode' })).toBeVisible();
+
+      // 8. Mobile Viewport Responsiveness: Test resizing to 375px mobile width
+      await page.setViewportSize({ width: 375, height: 667 });
+      await expect(page.getByRole('button', { name: 'Keyboard Shortcuts' })).not.toBeVisible();
+      await expect(page.getByText('for keyboard shortcuts')).not.toBeVisible();
+    }
+  });
 });
+
 

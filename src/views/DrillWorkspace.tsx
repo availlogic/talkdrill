@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { ArrowLeft, Printer, Eye, EyeOff, Award, SlidersHorizontal, Edit3, Archive, ArchiveRestore } from 'lucide-react';
+import { ArrowLeft, Printer, Eye, EyeOff, Award, SlidersHorizontal, Edit3, Archive, ArchiveRestore, Keyboard } from 'lucide-react';
 import { corpusService } from '../services/corpusService';
 import { drillCounterService } from '../services/drillCounterService';
 import { audioService } from '../services/audioService';
@@ -10,6 +10,7 @@ import { BigDrillCapsule } from '../components/BigDrillCapsule';
 import { AudioPlayerBar } from '../components/AudioPlayerBar';
 import { NumericOverrideModal } from '../components/NumericOverrideModal';
 import { PrintExportModal } from '../views/PrintExportModal';
+import { DrillShortcutsModal } from '../components/DrillShortcutsModal';
 import { WordLookupPopover } from '../components/WordLookupPopover';
 import { useWordLookup } from '../hooks/useWordLookup';
 import { DictionaryService } from '../services/dictionaryService';
@@ -58,6 +59,7 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
   const [isZenMode, setIsZenMode] = useState(false);
   const [isOverrideModalOpen, setIsOverrideModalOpen] = useState(false);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
   const [activeMilestone, setActiveMilestone] = useState<MilestoneResult | null>(null);
 
   const { lookupState, handleSelectionLookup, triggerLookup, closeLookup, hotkeyLabel, voiceURI } = useWordLookup();
@@ -71,6 +73,7 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
   // Audio player state
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isAudioPaused, setIsAudioPaused] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1.0);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -86,6 +89,7 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
     setLoopStart(null);
     setLoopEnd(null);
     setIsLooping(false);
+    setIsAudioPaused(false);
     playerEngine.clearLoopRegion();
   }, []);
 
@@ -161,40 +165,93 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
     setCurrentCount(next);
   }, [articleId, closeLookup]);
 
+  const handleAudioPlay = useCallback(() => {
+    if (isAudioPaused) {
+      playerEngine.play();
+    } else {
+      playerEngine.seek(loopStart ?? 0);
+      playerEngine.play();
+    }
+    setIsPlaying(true);
+    setIsAudioPaused(false);
+  }, [isAudioPaused, loopStart]);
+
+  const handleAudioPause = useCallback(() => {
+    if (!isPlaying) return;
+    playerEngine.pause();
+    setIsPlaying(false);
+    setIsAudioPaused(true);
+  }, [isPlaying]);
+
+  const handlePlayPause = useCallback(() => {
+    if (isPlaying) {
+      handleAudioPause();
+    } else {
+      handleAudioPlay();
+    }
+  }, [isPlaying, handleAudioPause, handleAudioPlay]);
+
   // Keyboard shortcut handler
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (isOverrideModalOpen || isPrintModalOpen) return;
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
-
+    const handleActionKeys = (e: KeyboardEvent) => {
       if (e.code === 'Space') {
         e.preventDefault();
         handleIncrement();
       } else if (e.code === 'KeyZ') {
         e.preventDefault();
         handleUndo();
+      } else if (e.code === 'KeyF') {
+        e.preventDefault();
+        setIsZenMode((prev) => !prev);
       } else if (e.code === 'KeyP') {
         e.preventDefault();
-        playerEngine.seek(loopStart ?? 0);
-        playerEngine.play();
-        setIsPlaying(true);
+        handleAudioPlay();
+      } else if (e.code === 'KeyS') {
+        e.preventDefault();
+        handleAudioPause();
       }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isOverrideModalOpen || isPrintModalOpen) return;
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        return;
+      }
+
+      if (e.key === '?' || (e.code === 'Slash' && e.shiftKey)) {
+        e.preventDefault();
+        setIsShortcutsModalOpen(true);
+        return;
+      }
+
+      if (e.code === 'Escape') {
+        if (isShortcutsModalOpen) {
+          e.preventDefault();
+          setIsShortcutsModalOpen(false);
+        } else if (isZenMode) {
+          e.preventDefault();
+          setIsZenMode(false);
+        }
+        return;
+      }
+
+      if (isShortcutsModalOpen || e.metaKey || e.ctrlKey || e.altKey) return;
+      handleActionKeys(e);
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleIncrement, handleUndo, isOverrideModalOpen, isPrintModalOpen, loopStart]);
-
-  const handlePlayPause = useCallback(() => {
-    if (isPlaying) {
-      playerEngine.pause();
-      setIsPlaying(false);
-    } else {
-      playerEngine.play();
-      setIsPlaying(true);
-    }
-  }, [isPlaying]);
+  }, [
+    handleIncrement,
+    handleUndo,
+    handleAudioPlay,
+    handleAudioPause,
+    isOverrideModalOpen,
+    isPrintModalOpen,
+    isShortcutsModalOpen,
+    isZenMode,
+  ]);
 
   const handleSeek = useCallback((t: number) => {
     playerEngine.seek(t);
@@ -365,6 +422,17 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
 
             <button
               type="button"
+              onClick={() => setIsShortcutsModalOpen(true)}
+              aria-label="Keyboard Shortcuts"
+              title="Keyboard Shortcuts (?)"
+              className="px-3 py-1.5 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 items-center gap-1.5 text-slate-700 dark:text-slate-300 hidden sm:flex"
+            >
+              <Keyboard className="w-3.5 h-3.5" />
+              <span className="hidden md:inline">Shortcuts</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setIsZenMode(true)}
               aria-label="Focus Mode"
               className="px-3 py-1.5 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1.5 text-slate-700 dark:text-slate-300"
@@ -452,9 +520,22 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
             onUndo={handleUndo}
           />
         </section>
+
+        {/* Subtle Discovery Hint for Keyboard Shortcuts (Desktop Only) */}
+        {!isZenMode && (
+          <div className="text-center text-[11px] font-mono text-slate-400 dark:text-slate-600 select-none hidden lg:block pt-1">
+            Press <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-[10px]">?</kbd> for keyboard shortcuts
+          </div>
+        )}
       </main>
 
       {/* Modals */}
+      <DrillShortcutsModal
+        isOpen={isShortcutsModalOpen}
+        onClose={() => setIsShortcutsModalOpen(false)}
+        dictHotkeyLabel={hotkeyLabel}
+      />
+
       <NumericOverrideModal
         isOpen={isOverrideModalOpen}
         initialValue={currentCount}
