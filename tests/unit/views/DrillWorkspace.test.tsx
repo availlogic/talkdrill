@@ -28,7 +28,11 @@ describe('DrillWorkspace View (TDD)', () => {
   it('renders target text and BigDrillCapsule with initial count', async () => {
     render(<DrillWorkspace articleId={articleId} onBack={vi.fn()} />);
 
-    expect(await screen.findByText('¿Nos cobras, por favor?')).toBeDefined();
+    const targetEl = await screen.findByText('¿Nos cobras, por favor?');
+    expect(targetEl.className).toContain('select-text');
+    expect(targetEl.className).toContain('cursor-text');
+    expect(targetEl.className).not.toContain('select-none');
+
     const langBadge = screen.getByText('es-ES');
     expect(langBadge.className).not.toContain('uppercase');
     expect(screen.getByRole('button', { name: /drill \+1/i })).toBeDefined();
@@ -50,6 +54,9 @@ describe('DrillWorkspace View (TDD)', () => {
     const targetEl1 = await screen.findByText('¡Perdona!');
     expect(targetEl1.className).toContain('whitespace-pre-wrap');
     expect(targetEl1.className).toContain('break-words');
+    expect(targetEl1.className).toContain('select-text');
+    expect(targetEl1.className).toContain('cursor-text');
+    expect(targetEl1.className).not.toContain('select-none');
 
     const sourceEl1 = screen.getByText('Excuse me!');
     expect(sourceEl1.className).toContain('whitespace-pre-wrap');
@@ -90,6 +97,9 @@ describe('DrillWorkspace View (TDD)', () => {
     // Target text should be displayed
     const targetEl = screen.getByText(/¡Perdona!/);
     expect(targetEl.textContent).toContain('¡Perdona!\n\n¿Sí?');
+    expect(targetEl.className).toContain('select-text');
+    expect(targetEl.className).toContain('cursor-text');
+    expect(targetEl.className).not.toContain('select-none');
   });
 
   it('displays only targetText without sourceText for direct_foreign articles with empty source', async () => {

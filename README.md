@@ -56,7 +56,7 @@ TalkDrill 专为高频肌肉记忆特训而生：
    - 依托 Service Worker 和 PWA 规范，静态外壳与已存音频即便在完全断网脱机状态下也能流畅无阻地练习。
 4. **纸电双轨与版式保真 (Digital & Physical Dual-Track with Whitespace Fidelity)**：
    - 提供 18pt 字号、2.2 倍行距的高清晰度纸质排版样式，随时导出打印 60 格（300次）或 100 格（500次）练字打卡纸。
-   - 屏幕跟读与纸质打印均通过 `whitespace-pre-wrap break-words` 严格保持原文对话换行与空行结构，拒绝长段挤压。
+   - 屏幕跟读与纸质打印均通过 `whitespace-pre-wrap break-words` 严格保持原文对话换行与空行结构，拒绝长段挤压；屏幕端外语正文采用 `select-text cursor-text` 规范支持光标自由划词选择。
 5. **全英文沉浸交互界面 (Full English Interface)**：
    - 整个应用的前端用户交互界面（UI/UX）、按钮、提示标签与无障碍语义标签均采用标准专业英文（English UI），营造沉浸式外语习得环境。
 6. **无障碍与 WCAG AAA 顶级对比度 (WCAG AAA High Contrast & Dual Themes)**：

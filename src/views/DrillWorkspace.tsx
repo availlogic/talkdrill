@@ -25,8 +25,8 @@ interface ParagraphListProps {
 export const BilingualParagraphList: React.FC<ParagraphListProps> = ({ paragraphs }) => {
   const isMulti = paragraphs.length > 1;
   const targetClasses = isMulti
-    ? 'text-xl sm:text-3xl font-serif font-medium leading-relaxed text-slate-900 dark:text-slate-50 tracking-wide select-none whitespace-pre-wrap break-words'
-    : 'text-2xl sm:text-4xl font-serif font-medium leading-relaxed sm:leading-loose text-slate-900 dark:text-slate-50 tracking-wide select-none whitespace-pre-wrap break-words';
+    ? 'text-xl sm:text-3xl font-serif font-medium leading-relaxed text-slate-900 dark:text-slate-50 tracking-wide select-text cursor-text whitespace-pre-wrap break-words'
+    : 'text-2xl sm:text-4xl font-serif font-medium leading-relaxed sm:leading-loose text-slate-900 dark:text-slate-50 tracking-wide select-text cursor-text whitespace-pre-wrap break-words';
   const sourceClasses = isMulti
     ? 'text-xs sm:text-sm text-slate-400 dark:text-slate-500 font-sans max-w-xl mx-auto whitespace-pre-wrap break-words mt-1 sm:mt-1.5'
     : 'text-sm sm:text-base text-slate-400 dark:text-slate-500 font-sans max-w-xl mx-auto whitespace-pre-wrap break-words mt-3 sm:mt-4';
@@ -260,7 +260,7 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
         {showInterleaved ? (
           <BilingualParagraphList paragraphs={alignedParagraphs} />
         ) : (
-          <p className="text-2xl sm:text-4xl font-serif font-medium leading-relaxed sm:leading-loose text-slate-900 dark:text-slate-50 tracking-wide select-none whitespace-pre-wrap break-words">
+          <p className="text-2xl sm:text-4xl font-serif font-medium leading-relaxed sm:leading-loose text-slate-900 dark:text-slate-50 tracking-wide select-text cursor-text whitespace-pre-wrap break-words">
             {article.targetText}
           </p>
         )}
