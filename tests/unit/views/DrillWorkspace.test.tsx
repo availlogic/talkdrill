@@ -157,6 +157,47 @@ describe('DrillWorkspace View (TDD)', () => {
     fireEvent.click(screen.getByRole('button', { name: /pause/i }));
   });
 
+  it('places AudioPlayerBar between text display and Tally Progress Board in non-focus mode, and at bottom in focus mode', async () => {
+    await db.audios.add({
+      id: 'audio-art-position-test',
+      articleId,
+      blob: new Blob(['mock-audio'], { type: 'audio/mpeg' }),
+      mimeType: 'audio/mpeg',
+      fileName: 'mock.mp3',
+      fileSize: 100,
+      duration: 30,
+      sourceType: 'upload',
+      createdAt: Date.now(),
+    });
+
+    render(<DrillWorkspace articleId={articleId} onBack={vi.fn()} />);
+
+    const targetTextEl = await screen.findByText('¿Nos cobras, por favor?');
+    const audioSlider = await screen.findByRole('slider', { name: /audio progress bar/i });
+    const tallyBoardLabel = screen.getByText('Tally Progress Board');
+    const drillCapsuleBtn = screen.getByRole('button', { name: /drill \+1/i });
+
+    // In non-focus mode:
+    // 1. target text is before audioSlider
+    expect(targetTextEl.compareDocumentPosition(audioSlider) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // 2. audioSlider is before tallyBoardLabel
+    expect(audioSlider.compareDocumentPosition(tallyBoardLabel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // 3. tallyBoardLabel is before drillCapsuleBtn
+    expect(tallyBoardLabel.compareDocumentPosition(drillCapsuleBtn) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    // Toggle Focus Mode
+    const focusBtn = screen.getByRole('button', { name: /focus mode/i });
+    fireEvent.click(focusBtn);
+
+    // In focus mode:
+    // Tally Progress Board should NOT be visible
+    expect(screen.queryByText('Tally Progress Board')).toBeNull();
+
+    // Audio player should still be visible and placed before the BigDrillCapsule at the bottom
+    const focusAudioSlider = screen.getByRole('slider', { name: /audio progress bar/i });
+    expect(focusAudioSlider.compareDocumentPosition(drillCapsuleBtn) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it('renders Edit button and triggers onEdit callback', async () => {
     const editSpy = vi.fn();
     render(<DrillWorkspace articleId={articleId} onBack={vi.fn()} onEdit={editSpy} />);

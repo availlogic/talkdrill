@@ -119,6 +119,77 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleIncrement, handleUndo, isOverrideModalOpen, isPrintModalOpen, loopStart]);
 
+  const handlePlayPause = useCallback(() => {
+    if (isPlaying) {
+      playerEngine.pause();
+      setIsPlaying(false);
+    } else {
+      playerEngine.play();
+      setIsPlaying(true);
+    }
+  }, [isPlaying]);
+
+  const handleSeek = useCallback((t: number) => {
+    playerEngine.seek(t);
+    setCurrentTime(t);
+  }, []);
+
+  const handleRateChange = useCallback((r: number) => {
+    playerEngine.setPlaybackRate(r as 0.5 | 0.75 | 1.0 | 1.25 | 1.5);
+  }, []);
+
+  const handleJump = useCallback((delta: number) => {
+    playerEngine.skip(delta);
+  }, []);
+
+  const handleSetLoopPoint = useCallback((pt: 'A' | 'B') => {
+    if (pt === 'A') {
+      loopStartRef.current = currentTime;
+      setLoopStart(currentTime);
+      if (loopEndRef.current !== null && loopEndRef.current > currentTime) {
+        playerEngine.setLoopRegion(currentTime, loopEndRef.current);
+        setIsLooping(true);
+      }
+    } else {
+      loopEndRef.current = currentTime;
+      setLoopEnd(currentTime);
+      const start = loopStartRef.current ?? 0;
+      playerEngine.setLoopRegion(start, Math.max(start + 0.1, currentTime));
+      setIsLooping(true);
+    }
+  }, [currentTime]);
+
+  const handleClearLoop = useCallback(() => {
+    loopStartRef.current = null;
+    loopEndRef.current = null;
+    setLoopStart(null);
+    setLoopEnd(null);
+    setIsLooping(false);
+    playerEngine.clearLoopRegion();
+  }, []);
+
+  const renderAudioPlayerBar = () => {
+    if (!audioUrl) return null;
+    return (
+      <AudioPlayerBar
+        audioUrl={audioUrl}
+        isPlaying={isPlaying}
+        playbackRate={playbackRate}
+        currentTime={currentTime}
+        duration={duration}
+        isLooping={isLooping}
+        loopStart={loopStart}
+        loopEnd={loopEnd}
+        onPlayPause={handlePlayPause}
+        onSeek={handleSeek}
+        onRateChange={handleRateChange}
+        onJump={handleJump}
+        onSetLoopPoint={handleSetLoopPoint}
+        onClearLoop={handleClearLoop}
+      />
+    );
+  };
+
   if (!article) {
     return <div className="p-8 text-center text-slate-500">Loading workspace...</div>;
   }
@@ -260,6 +331,9 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
           )}
         </section>
 
+        {/* Audio Player in Non-Focus Mode (between Corpus Display and Tally Progress Board) */}
+        {!isZenMode && renderAudioPlayerBar()}
+
         {/* Zheng Matrix live drawing */}
         {!isZenMode && (
           <section className="space-y-2">
@@ -275,59 +349,9 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
           </section>
         )}
 
-        {/* Bottom Bar: Player and Giant Drill Capsule */}
+        {/* Bottom Bar: Player (Focus Mode only) and Giant Drill Capsule */}
         <section className="space-y-4 pt-2">
-          {audioUrl && (
-            <AudioPlayerBar
-              audioUrl={audioUrl}
-              isPlaying={isPlaying}
-              playbackRate={playbackRate}
-              currentTime={currentTime}
-              duration={duration}
-              isLooping={isLooping}
-              loopStart={loopStart}
-              loopEnd={loopEnd}
-              onPlayPause={() => {
-                if (isPlaying) {
-                  playerEngine.pause();
-                  setIsPlaying(false);
-                } else {
-                  playerEngine.play();
-                  setIsPlaying(true);
-                }
-              }}
-              onSeek={(t) => {
-                playerEngine.seek(t);
-                setCurrentTime(t);
-              }}
-              onRateChange={(r) => playerEngine.setPlaybackRate(r as 0.5 | 0.75 | 1.0 | 1.25 | 1.5)}
-              onJump={(delta) => playerEngine.skip(delta)}
-              onSetLoopPoint={(pt) => {
-                if (pt === 'A') {
-                  loopStartRef.current = currentTime;
-                  setLoopStart(currentTime);
-                  if (loopEndRef.current !== null && loopEndRef.current > currentTime) {
-                    playerEngine.setLoopRegion(currentTime, loopEndRef.current);
-                    setIsLooping(true);
-                  }
-                } else {
-                  loopEndRef.current = currentTime;
-                  setLoopEnd(currentTime);
-                  const start = loopStartRef.current ?? 0;
-                  playerEngine.setLoopRegion(start, Math.max(start + 0.1, currentTime));
-                  setIsLooping(true);
-                }
-              }}
-              onClearLoop={() => {
-                loopStartRef.current = null;
-                loopEndRef.current = null;
-                setLoopStart(null);
-                setLoopEnd(null);
-                setIsLooping(false);
-                playerEngine.clearLoopRegion();
-              }}
-            />
-          )}
+          {isZenMode && renderAudioPlayerBar()}
 
           <BigDrillCapsule
             currentCount={currentCount}
