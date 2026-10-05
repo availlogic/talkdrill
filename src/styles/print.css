@@ -11,11 +11,14 @@
     color: #000000 !important;
     font-size: 12pt;
     line-height: 1.5;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
-  /* Hide interactive web UI controls */
+  /* Hide interactive web UI controls and background workspace */
   header,
   nav,
+  main,
   button,
   input,
   select,
@@ -29,43 +32,98 @@
     display: none !important;
   }
 
+  /* Reset modal dialog overlay and card container to standard print document flow */
+  [role="dialog"] {
+    position: static !important;
+    inset: auto !important;
+    z-index: auto !important;
+    display: block !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    max-width: none !important;
+    width: 100% !important;
+    box-shadow: none !important;
+  }
+
+  [role="dialog"] > div {
+    position: static !important;
+    display: block !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    overflow: visible !important;
+  }
+
   /* Printable sheet container */
   .printable-sheet {
     display: block !important;
     width: 100% !important;
+    max-height: none !important;
+    overflow: visible !important;
     margin: 0 !important;
     padding: 0 !important;
-    page-break-inside: avoid;
-    break-inside: avoid;
+    border: none !important;
+    background: transparent !important;
+    page-break-inside: auto;
+    break-inside: auto;
   }
 
-  /* Target shadowing text with generous handwriting room */
+  /* Centered foreign language title */
+  .print-drill-title {
+    text-align: center !important;
+    font-size: 20pt !important;
+    font-weight: 700 !important;
+    color: #000000 !important;
+    margin-top: 0 !important;
+    margin-bottom: 20pt !important;
+  }
+
+  /* Target shadowing text with generous handwriting room (full empty line between lines) */
   .print-drill-text {
-    font-size: 18pt !important;
-    line-height: 2.2 !important;
+    text-align: left !important;
+    font-size: 16pt !important;
+    line-height: 2.5 !important;
     font-family: Georgia, Cambria, "Times New Roman", Times, serif !important;
     color: #111827 !important;
     margin-bottom: 24pt !important;
     padding-bottom: 16pt !important;
-    border-bottom: 1pt solid #e2e8f0 !important;
+    border-bottom: 0.5pt solid #e2e8f0 !important;
     word-break: break-word !important;
+    white-space: pre-wrap !important;
   }
 
-  /* Print Tally Grid */
+  /* Compact Tally Grid: 10 columns, 6.2mm cells, 1.5mm gap */
   .print-tally-grid {
     display: grid !important;
-    grid-template-columns: repeat(10, 1fr) !important;
-    gap: 6pt !important;
+    grid-template-columns: repeat(10, 6.2mm) !important;
+    gap: 1.5mm !important;
     page-break-inside: avoid;
     break-inside: avoid;
+    margin-top: 12pt !important;
   }
 
+  /* 6mm small square tally box with fine dashed gray border */
   .print-tally-box {
+    width: 6.2mm !important;
+    height: 6.2mm !important;
+    min-width: 6.2mm !important;
+    min-height: 6.2mm !important;
     aspect-ratio: 1 / 1 !important;
-    border: 1pt solid #94a3b8 !important;
-    border-radius: 2pt !important;
+    border: 0.5pt dashed #94a3b8 !important;
+    border-radius: 1pt !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    font-size: 6pt !important;
+    color: #94a3b8 !important;
+    box-sizing: border-box !important;
   }
 }

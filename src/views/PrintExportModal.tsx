@@ -37,10 +37,10 @@ export const PrintExportModal: React.FC<PrintExportModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="print-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto print:static print:inset-auto print:z-auto print:p-0 print:m-0 print:bg-transparent print:backdrop-blur-none print:overflow-visible"
     >
-      <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 space-y-5 my-8">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+      <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 space-y-5 my-8 print:w-full print:max-w-none print:bg-transparent print:rounded-none print:shadow-none print:border-none print:p-0 print:m-0 print:space-y-0">
+        <div className="no-print print:hidden flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
           <h3 id="print-modal-title" className="text-lg font-bold text-slate-900 dark:text-slate-100">
             Print Worksheet & Tally Sheet Export
           </h3>
@@ -54,7 +54,7 @@ export const PrintExportModal: React.FC<PrintExportModalProps> = ({
           </button>
         </div>
 
-        <div className="flex items-center justify-between gap-4">
+        <div className="no-print print:hidden flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Tally Boxes:</span>
             <div className="flex bg-slate-200/70 dark:bg-slate-800 border border-slate-300/70 dark:border-slate-700 p-0.5 rounded-xl shadow-xs">
@@ -106,20 +106,21 @@ export const PrintExportModal: React.FC<PrintExportModalProps> = ({
         </div>
 
         {/* Paper Sheet Preview Area */}
-        <div className="printable-sheet p-6 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-950 font-serif space-y-4 max-h-[420px] overflow-y-auto">
+        <div className="printable-sheet p-6 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-950 font-serif space-y-4 max-h-[420px] overflow-y-auto print:max-h-none print:overflow-visible print:border-none print:p-0 print:m-0 print:bg-transparent">
           <div>
-            <h4 className="text-xl font-bold text-slate-900 dark:text-slate-100">{article.title}</h4>
-            <p className="text-xs text-slate-500 mt-0.5">Target: {tallyBoxes * 5} reps shadowing drill</p>
+            <h4 className="print-drill-title text-xl font-bold text-slate-900 dark:text-slate-100 text-center">
+              {article.title}
+            </h4>
           </div>
 
-          <div className="p-4 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 print:border-none print:p-0">
+          <div className="p-4 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 print:border-none print:p-0 print:bg-transparent">
             <p className="print-drill-text text-lg leading-relaxed text-slate-900 dark:text-slate-100 whitespace-pre-wrap break-words">
               {article.targetText}
             </p>
           </div>
 
           <div>
-            <h5 className="text-xs font-sans font-semibold text-slate-500 mb-2">
+            <h5 className="no-print print:hidden text-xs font-sans font-semibold text-slate-500 mb-2">
               Tally Sheet ({tallyBoxes} boxes, 5 reps per box):
             </h5>
             <div className="print-tally-grid grid grid-cols-10 gap-1.5">

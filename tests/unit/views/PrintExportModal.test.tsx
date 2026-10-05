@@ -81,4 +81,51 @@ describe('PrintExportModal View (TDD)', () => {
       expect(text).toContain('Un café con leche, por favor.');
     });
   });
+
+  it('renders centered title without target reps subtitle for clean print layout', () => {
+    render(<PrintExportModal article={mockArticle} isOpen={true} onClose={vi.fn()} />);
+
+    const titleEl = screen.getByRole('heading', { level: 4, name: 'Café en Barcelona' });
+    expect(titleEl).toBeDefined();
+    expect(titleEl.className).toContain('print-drill-title');
+    expect(screen.queryByText(/Target:.*reps/i)).toBeNull();
+  });
+
+  it('hides modal header and interactive controls toolbar from print using no-print', () => {
+    render(<PrintExportModal article={mockArticle} isOpen={true} onClose={vi.fn()} />);
+
+    const modalTitle = screen.getByText('Print Worksheet & Tally Sheet Export');
+    const headerContainer = modalTitle.closest('div');
+    expect(headerContainer?.className).toContain('no-print');
+    expect(headerContainer?.className).toContain('print:hidden');
+
+    const tallyLabel = screen.getByText('Tally Boxes:');
+    const toolbarContainer = tallyLabel.closest('.flex.items-center.justify-between');
+    expect(toolbarContainer?.className).toContain('no-print');
+    expect(toolbarContainer?.className).toContain('print:hidden');
+  });
+
+  it('ensures printable sheet expands without max-height or overflow constraints in print', () => {
+    const { container } = render(<PrintExportModal article={mockArticle} isOpen={true} onClose={vi.fn()} />);
+
+    const sheetEl = container.querySelector('.printable-sheet');
+    expect(sheetEl?.className).toContain('print:max-h-none');
+    expect(sheetEl?.className).toContain('print:overflow-visible');
+    expect(sheetEl?.className).toContain('print:border-none');
+  });
+
+  it('renders dashed-border tally boxes for both 60 and 100 boxes', () => {
+    const { container } = render(<PrintExportModal article={mockArticle} isOpen={true} onClose={vi.fn()} />);
+
+    const boxes100 = container.querySelectorAll('.print-tally-box');
+    expect(boxes100.length).toBe(100);
+    expect(boxes100[0]?.className).toContain('border-dashed');
+
+    const btn60 = screen.getByRole('button', { name: '60 Boxes (300 reps)' });
+    fireEvent.click(btn60);
+
+    const boxes60 = container.querySelectorAll('.print-tally-box');
+    expect(boxes60.length).toBe(60);
+  });
 });
+
