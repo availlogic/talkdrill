@@ -20,6 +20,8 @@ test.describe('TalkDrill E2E Journeys', () => {
 
     // 2. Studio Entry
     await expect(page.getByText('Corpus Studio')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'AI Spoken Translation' })).toHaveAttribute('aria-pressed', 'true');
+    await page.getByRole('button', { name: 'Direct Foreign Text' }).click();
     await page.getByPlaceholder('Enter drill title (optional)').fill('Elena Restaurante');
     await page.getByPlaceholder('Enter or paste foreign text here...').fill('¿Nos cobras, por favor?');
 
@@ -76,6 +78,7 @@ test.describe('TalkDrill E2E Journeys', () => {
   test('E2E-SCN-002: Kenji Mobile Journey - Responsive Touch Capsule & Override', async ({ page }) => {
     // 1. Create drill article
     await page.getByRole('button', { name: 'Create First Drill' }).click();
+    await page.getByRole('button', { name: 'Direct Foreign Text' }).click();
     await page.getByPlaceholder('Enter or paste foreign text here...').fill('すみません、お会計をお願いします。');
     await page.getByPlaceholder('Enter drill title (optional)').fill('Japanese Restaurant Checkout');
     await page.getByRole('button', { name: 'Save and Start Drill' }).click();
@@ -108,6 +111,7 @@ test.describe('TalkDrill E2E Journeys', () => {
   test('E2E-SCN-003: 100% Offline Shadowing and Data Integrity', async ({ page }) => {
     // 1. Create offline test article
     await page.getByRole('button', { name: 'Create First Drill' }).click();
+    await page.getByRole('button', { name: 'Direct Foreign Text' }).click();
     await page.getByPlaceholder('Enter or paste foreign text here...').fill('Offline shadowing fluency');
     await page.getByRole('button', { name: 'Save and Start Drill' }).click();
     await expect(page.getByText('Offline shadowing fluency')).toBeVisible();
@@ -136,6 +140,7 @@ test.describe('TalkDrill E2E Journeys', () => {
   test('E2E-SCN-004: Settings Hub & Atomic Data Purge', async ({ page }) => {
     // 1. Create a dummy article first
     await page.getByRole('button', { name: 'Create First Drill' }).click();
+    await page.getByRole('button', { name: 'Direct Foreign Text' }).click();
     await page.getByPlaceholder('Enter or paste foreign text here...').fill('Temporary test text');
     await page.getByRole('button', { name: 'Save and Start Drill' }).click();
     await expect(page.getByText('Temporary test text')).toBeVisible();
@@ -167,6 +172,7 @@ test.describe('TalkDrill E2E Journeys', () => {
   test('E2E-SCN-005: Edit Drill & Archive/Restore Full Lifecycle', async ({ page }) => {
     // 1. Create a drill
     await page.getByRole('button', { name: 'Create First Drill' }).click();
+    await page.getByRole('button', { name: 'Direct Foreign Text' }).click();
     await page.getByPlaceholder('Enter drill title (optional)').fill('Lifecycle Drill');
     await page.getByPlaceholder('Enter or paste foreign text here...').fill('Original target sentence.');
     await page.getByRole('button', { name: 'Save and Start Drill' }).click();
@@ -183,6 +189,8 @@ test.describe('TalkDrill E2E Journeys', () => {
     // 3. Click Edit from Drill Workspace
     await page.getByRole('button', { name: 'Edit Drill' }).click();
     await expect(page.getByText('Edit Drill')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'AI Spoken Translation' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Direct Foreign Text' })).toHaveAttribute('aria-pressed', 'true');
 
     // 4. Modify drill content
     const titleInput = page.getByPlaceholder('Enter drill title (optional)');

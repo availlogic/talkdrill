@@ -21,7 +21,7 @@ TalkDrill 专为高频肌肉记忆特训而生：
 ```
 [UI Views]
   ├── LibraryOverview (语料库与容量看板 / Active 与 Archived 独立视图 / 归档与编辑入口)
-  ├── CorpusStudio (直接录入 / AI 口语翻译 / 篇目与音频可编辑 / 自有与第三方生成音频导入)
+  ├── CorpusStudio (AI 口语翻译默认 / 直接录入 / 篇目与音频可编辑 / 自有与第三方生成音频导入)
   ├── DrillWorkspace (跟读特训空间 / 正字矩阵 / 触控大胶囊 / 极简专注模式 / 直接编辑与归档)
   ├── PrintExportModal (60/100 格纸质打卡表与 Markdown 导出)
   └── SettingsHub (Anthropic BYOK 凭据与同源代理 / 主题模式 / 危险区原子清除)

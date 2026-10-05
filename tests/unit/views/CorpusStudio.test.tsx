@@ -10,17 +10,25 @@ describe('CorpusStudio View (TDD)', () => {
     await db.drillLogs.clear();
   });
 
-  it('switches between Mode A (Direct Foreign) and Mode B (AI Translation)', () => {
+  it('defaults to AI Spoken Translation as the first tab and allows switching to Direct Foreign Text', () => {
     render(<CorpusStudio onCancel={vi.fn()} onStartDrill={vi.fn()} />);
 
-    const modeABtn = screen.getByRole('button', { name: 'Direct Foreign Text' });
-    const modeBBtn = screen.getByRole('button', { name: 'AI Spoken Translation' });
+    const aiBtn = screen.getByRole('button', { name: 'AI Spoken Translation' });
+    const directBtn = screen.getByRole('button', { name: 'Direct Foreign Text' });
 
-    expect(modeABtn.getAttribute('aria-pressed')).toBe('true');
+    // Assert AI Spoken Translation appears before Direct Foreign Text in DOM
+    expect(aiBtn.compareDocumentPosition(directBtn) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
-    fireEvent.click(modeBBtn);
-    expect(modeBBtn.getAttribute('aria-pressed')).toBe('true');
+    // Assert AI Spoken Translation is default (aria-pressed=true)
+    expect(aiBtn.getAttribute('aria-pressed')).toBe('true');
+    expect(directBtn.getAttribute('aria-pressed')).toBe('false');
     expect(screen.getByRole('button', { name: 'Translate to Spoken Target' })).toBeDefined();
+
+    // Switch to Direct Foreign Text
+    fireEvent.click(directBtn);
+    expect(directBtn.getAttribute('aria-pressed')).toBe('true');
+    expect(aiBtn.getAttribute('aria-pressed')).toBe('false');
+    expect(screen.getByPlaceholderText('Enter or paste foreign text here...')).toBeDefined();
   });
 
   it('allows text input and title customization', () => {
@@ -30,9 +38,13 @@ describe('CorpusStudio View (TDD)', () => {
     fireEvent.change(titleInput, { target: { value: 'Pedido en Restaurante' } });
     expect((titleInput as HTMLInputElement).value).toBe('Pedido en Restaurante');
 
-    const textArea = screen.getByPlaceholderText('Enter or paste foreign text here...');
-    fireEvent.change(textArea, { target: { value: 'Una mesa para dos, por favor.' } });
-    expect((textArea as HTMLTextAreaElement).value).toBe('Una mesa para dos, por favor.');
+    const sourceArea = screen.getByPlaceholderText('Enter original text or expression draft to translate into idiomatic spoken target text...');
+    fireEvent.change(sourceArea, { target: { value: 'Una mesa para dos, por favor.' } });
+    expect((sourceArea as HTMLTextAreaElement).value).toBe('Una mesa para dos, por favor.');
+
+    const targetArea = screen.getByPlaceholderText('Translated spoken target text will appear here...');
+    fireEvent.change(targetArea, { target: { value: 'A table for two, please.' } });
+    expect((targetArea as HTMLTextAreaElement).value).toBe('A table for two, please.');
   });
 
   it('saves article and triggers onStartDrill', async () => {
@@ -42,7 +54,7 @@ describe('CorpusStudio View (TDD)', () => {
     const titleInput = screen.getByPlaceholderText('Enter drill title (optional)');
     fireEvent.change(titleInput, { target: { value: 'Cafe drill' } });
 
-    const textArea = screen.getByPlaceholderText('Enter or paste foreign text here...');
+    const textArea = screen.getByPlaceholderText('Translated spoken target text will appear here...');
     fireEvent.change(textArea, { target: { value: 'Dos cafés solos, gracias.' } });
 
     const submitBtn = screen.getByRole('button', { name: 'Save and Start Drill' });
@@ -54,14 +66,12 @@ describe('CorpusStudio View (TDD)', () => {
       const saved = await db.articles.get(articleId);
       expect(saved?.title).toBe('Cafe drill');
       expect(saved?.targetText).toBe('Dos cafés solos, gracias.');
+      expect(saved?.mode).toBe('translate_needed');
     });
   });
 
-  it('triggers AI translation in Mode B', async () => {
+  it('triggers AI translation in default AI Spoken Translation mode', async () => {
     render(<CorpusStudio onCancel={vi.fn()} onStartDrill={vi.fn()} />);
-
-    // Switch to Mode B
-    fireEvent.click(screen.getByRole('button', { name: 'AI Spoken Translation' }));
 
     const sourceArea = screen.getByPlaceholderText('Enter original text or expression draft to translate into idiomatic spoken target text...');
     fireEvent.change(sourceArea, { target: { value: '买单，谢谢。' } });
@@ -108,6 +118,9 @@ describe('CorpusStudio View (TDD)', () => {
     const countSelect = screen.getByLabelText('Muscle Memory Target Reps') as HTMLSelectElement;
     fireEvent.change(countSelect, { target: { value: '300' } });
     expect(countSelect.value).toBe('300');
+
+    // Switch to Direct Foreign Text tab for .txt file import
+    fireEvent.click(screen.getByRole('button', { name: 'Direct Foreign Text' }));
 
     // Test text file upload
     const txtInput = document.querySelector('input[type="file"][accept=".txt"]') as HTMLInputElement;

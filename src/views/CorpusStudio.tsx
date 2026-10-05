@@ -13,7 +13,7 @@ export interface CorpusStudioProps {
 }
 
 export const CorpusStudio: React.FC<CorpusStudioProps> = ({ onCancel, onStartDrill, editArticleId }) => {
-  const [mode, setMode] = useState<LanguageMode>('direct_foreign');
+  const [mode, setMode] = useState<LanguageMode>('translate_needed');
   const [title, setTitle] = useState('');
   const [sourceText, setSourceText] = useState('');
   const [targetText, setTargetText] = useState('');
@@ -36,7 +36,7 @@ export const CorpusStudio: React.FC<CorpusStudioProps> = ({ onCancel, onStartDri
         setTargetLang(art.targetLang);
         if (art.sourceLang) setSourceLang(art.sourceLang);
         setTargetCount(art.targetCount);
-        setMode(art.mode);
+        setMode(art.mode || 'translate_needed');
       }
     });
 
@@ -190,18 +190,6 @@ export const CorpusStudio: React.FC<CorpusStudioProps> = ({ onCancel, onStartDri
       <div className="grid grid-cols-2 gap-3">
         <button
           type="button"
-          aria-pressed={mode === 'direct_foreign'}
-          onClick={() => setMode('direct_foreign')}
-          className={`p-3 rounded-2xl border text-sm font-semibold transition-all ${
-            mode === 'direct_foreign'
-              ? 'border-blue-600 bg-blue-50/80 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 shadow-xs'
-              : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-          }`}
-        >
-          Direct Foreign Text
-        </button>
-        <button
-          type="button"
           aria-pressed={mode === 'translate_needed'}
           onClick={() => setMode('translate_needed')}
           className={`p-3 rounded-2xl border text-sm font-semibold transition-all ${
@@ -211,6 +199,18 @@ export const CorpusStudio: React.FC<CorpusStudioProps> = ({ onCancel, onStartDri
           }`}
         >
           AI Spoken Translation
+        </button>
+        <button
+          type="button"
+          aria-pressed={mode === 'direct_foreign'}
+          onClick={() => setMode('direct_foreign')}
+          className={`p-3 rounded-2xl border text-sm font-semibold transition-all ${
+            mode === 'direct_foreign'
+              ? 'border-blue-600 bg-blue-50/80 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 shadow-xs'
+              : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+          }`}
+        >
+          Direct Foreign Text
         </button>
       </div>
 
