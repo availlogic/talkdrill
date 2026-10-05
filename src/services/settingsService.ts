@@ -19,6 +19,10 @@ export const DEFAULT_SETTINGS: AppSettings = {
   printOptions: {
     defaultTallyBoxes: 100,
   },
+  dictionary: {
+    hotkey: 'Alt',
+    cacheTtlDays: 2,
+  },
 };
 
 const SETTINGS_KEY = 'app_settings';
@@ -34,6 +38,7 @@ export class SettingsService {
       translation: { ...DEFAULT_SETTINGS.translation, ...record.value.translation },
       tts: { ...DEFAULT_SETTINGS.tts, ...record.value.tts },
       printOptions: { ...DEFAULT_SETTINGS.printOptions, ...record.value.printOptions },
+      dictionary: { ...DEFAULT_SETTINGS.dictionary, ...record.value.dictionary },
     };
   }
 
@@ -44,6 +49,7 @@ export class SettingsService {
       translation: partial.translation ? { ...current.translation, ...partial.translation } : current.translation,
       tts: partial.tts ? { ...current.tts, ...partial.tts } : current.tts,
       printOptions: partial.printOptions ? { ...current.printOptions, ...partial.printOptions } : current.printOptions,
+      dictionary: partial.dictionary ? { ...current.dictionary, ...partial.dictionary } : current.dictionary,
     };
 
     await db.settings.put({

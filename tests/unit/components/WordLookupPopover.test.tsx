@@ -129,6 +129,32 @@ describe('WordLookupPopover (TDD)', () => {
 
       expect(screen.getByText('Cached')).toBeDefined();
     });
+
+    it('renders pending prompt with hotkey label badge and lookup button', () => {
+      const handleTrigger = vi.fn();
+      render(
+        <WordLookupPopover
+          word="desarrollo"
+          lang="es-ES"
+          x={100}
+          y={150}
+          loading={false}
+          isPendingTrigger={true}
+          hotkeyLabel="Option / Alt"
+          onTriggerLookup={handleTrigger}
+          result={null}
+          error={null}
+          onClose={vi.fn()}
+        />
+      );
+
+      expect(screen.getByText('Option / Alt')).toBeDefined();
+      const triggerBtn = screen.getByRole('button', { name: /Look Up with AI/i });
+      expect(triggerBtn).toBeDefined();
+
+      fireEvent.click(triggerBtn);
+      expect(handleTrigger).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('interactions', () => {

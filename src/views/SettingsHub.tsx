@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Save, AlertTriangle, Shield, Sun, Moon, Laptop } from 'lucide-react';
+import { ArrowLeft, Save, AlertTriangle, Shield, Sun, Moon, Laptop, BookOpen, Trash2 } from 'lucide-react';
 import { settingsService } from '../services/settingsService';
+import { DictionaryService } from '../services/dictionaryService';
 import { themeManager } from '../utils/themeManager';
 import { type AppSettings } from '../types/models';
 
@@ -25,6 +26,22 @@ export const SettingsHub: React.FC<SettingsHubProps> = ({ onBack }) => {
     e.preventDefault();
     await settingsService.updateSettings({ translation: settings.translation });
     setStatusMessage('Translation configuration saved.');
+    setTimeout(() => setStatusMessage(null), 3000);
+  };
+
+  const handleSaveDictionary = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (settings.dictionary) {
+      await settingsService.updateSettings({ dictionary: settings.dictionary });
+      setStatusMessage('Dictionary configuration saved.');
+      setTimeout(() => setStatusMessage(null), 3000);
+    }
+  };
+
+  const handleClearDictionaryCache = async () => {
+    const dictService = new DictionaryService();
+    await dictService.clearCache();
+    setStatusMessage('Dictionary cache cleared successfully.');
     setTimeout(() => setStatusMessage(null), 3000);
   };
 
@@ -203,6 +220,102 @@ export const SettingsHub: React.FC<SettingsHubProps> = ({ onBack }) => {
           >
             <Save className="w-4 h-4" />
             <span>Save Translation Settings</span>
+          </button>
+        </div>
+      </form>
+
+      {/* Word Lookup & Dictionary */}
+      <form
+        onSubmit={handleSaveDictionary}
+        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4 shadow-sm"
+      >
+        <div className="flex items-center gap-2">
+          <BookOpen className="w-5 h-5 text-amber-600 dark:text-amber-500" />
+          <h3 className="font-bold text-slate-900 dark:text-slate-100">Word Lookup & Dictionary</h3>
+        </div>
+        <p className="text-xs text-slate-600 dark:text-slate-400">
+          Configure the trigger hotkey for looking up definitions with AI when text is selected, and set cache retention duration.
+        </p>
+
+        <div className="space-y-3">
+          <div>
+            <label htmlFor="dict-hotkey" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              Lookup Hotkey Trigger
+            </label>
+            <select
+              id="dict-hotkey"
+              value={settings.dictionary?.hotkey ?? 'Alt'}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  dictionary: {
+                    ...(settings.dictionary ?? { cacheTtlDays: 2 }),
+                    hotkey: e.target.value,
+                  },
+                })
+              }
+              className="w-full text-sm p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+            >
+              <option value="Alt">Option / Alt (Any)</option>
+              <option value="AltLeft">Left Option only</option>
+              <option value="Meta">Command ⌘ (Any)</option>
+              <option value="MetaLeft">Left Command ⌘ only</option>
+              <option value="Control">Control (Any)</option>
+              <option value="ControlLeft">Left Control only</option>
+              <option value="Shift">Shift</option>
+              <option value="KeyD">Key D</option>
+            </select>
+            <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+              When text is highlighted, press this key to query AI. Cached words display automatically without hotkey.
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="dict-cache-ttl" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              Cache Retention Period
+            </label>
+            <select
+              id="dict-cache-ttl"
+              value={settings.dictionary?.cacheTtlDays ?? 2}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  dictionary: {
+                    ...(settings.dictionary ?? { hotkey: 'Alt' }),
+                    cacheTtlDays: Number(e.target.value),
+                  },
+                })
+              }
+              className="w-full text-sm p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+            >
+              <option value="1">1 Day</option>
+              <option value="2">2 Days (Default)</option>
+              <option value="7">7 Days</option>
+              <option value="30">30 Days</option>
+              <option value="0">Forever (No Expiration)</option>
+            </select>
+            <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+              Cached definitions older than this period will be automatically expired and cleared.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between pt-2">
+          <button
+            type="button"
+            onClick={handleClearDictionaryCache}
+            className="px-3 py-2 bg-stone-100 hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Clear Dictionary Cache</span>
+          </button>
+
+          <button
+            type="submit"
+            className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 transition"
+          >
+            <Save className="w-4 h-4" />
+            <span>Save Dictionary Settings</span>
           </button>
         </div>
       </form>

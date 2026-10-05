@@ -43,6 +43,11 @@ export interface DrillLog {
 
 export type ThemePreference = 'system' | 'light' | 'dark';
 
+export interface DictionaryConfig {
+  hotkey: string;
+  cacheTtlDays: number;
+}
+
 export interface AppSettings {
   theme?: ThemePreference | undefined;
   translation: {
@@ -62,7 +67,9 @@ export interface AppSettings {
   printOptions: {
     defaultTallyBoxes: 60 | 100;
   };
+  dictionary: DictionaryConfig;
 }
+
 
 export interface ZhengStrokeState {
   fullZhengCount: number;

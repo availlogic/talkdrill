@@ -4,6 +4,7 @@ import { DrillWorkspace } from '../../../src/views/DrillWorkspace';
 import { db } from '../../../src/storage/db';
 import { corpusService } from '../../../src/services/corpusService';
 import { playerEngine } from '../../../src/services/playerEngine';
+import { DictionaryService } from '../../../src/services/dictionaryService';
 
 describe('DrillWorkspace View (TDD)', () => {
   let articleId: string;
@@ -369,6 +370,46 @@ describe('DrillWorkspace View (TDD)', () => {
 
     // Popover automatically dismisses
     expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('shows pending prompt for uncached word and triggers lookup on hotkey', async () => {
+    const lookupSpy = vi.spyOn(DictionaryService.prototype, 'lookupWord').mockResolvedValue({
+      text: 'favor',
+      lang: 'es-ES',
+      ipa: '/faˈβoɾ/',
+      translation: 'favor / please',
+      source: 'api',
+    });
+
+    const mockRange = {
+      getBoundingClientRect: () => ({ left: 200, bottom: 300 }),
+    };
+    vi.spyOn(window, 'getSelection').mockReturnValue({
+      rangeCount: 1,
+      isCollapsed: false,
+      toString: () => 'favor',
+      getRangeAt: () => mockRange,
+    } as unknown as Selection);
+
+    render(<DrillWorkspace articleId={articleId} onBack={vi.fn()} />);
+
+    const targetEl = await screen.findByText('¿Nos cobras, por favor?');
+    fireEvent.mouseUp(targetEl);
+
+    // Shows pending prompt with button and hotkey
+    expect(await screen.findByRole('dialog')).toBeDefined();
+    expect(await screen.findByRole('button', { name: /Look Up with AI/i })).toBeDefined();
+    expect(lookupSpy).not.toHaveBeenCalled();
+
+    // Trigger via hotkey
+    fireEvent.keyDown(window, { key: 'Alt', code: 'AltLeft' });
+
+    expect(lookupSpy).toHaveBeenCalledWith({
+      text: 'favor',
+      lang: 'es-ES',
+      contextSentence: undefined,
+    });
+    expect(await screen.findByText('/faˈβoɾ/')).toBeDefined();
   });
 });
 

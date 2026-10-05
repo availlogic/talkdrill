@@ -11,6 +11,7 @@ export interface LookupWordParams {
 
 const LEADING_PUNCT = /^[\s¿¡"“'«».,!?;:()[\]{}\-–—]+/;
 const TRAILING_PUNCT = /[\s"”'«».,!?;:()[\]{}\-–—]+$/;
+const MS_PER_DAY = 86_400_000;
 
 export function normalizeLookupText(text: string): string {
   const trimmed = text.trim();
@@ -115,7 +116,33 @@ export class DictionaryService {
 
 
 
-  private async getCachedResult(lang: string, text: string): Promise<WordLookupResult | null> {
+  private async resolveTtlDays(ttlDays?: number): Promise<number> {
+    if (typeof ttlDays === 'number') {
+      return ttlDays;
+    }
+    const settings = await this.settingsService.getSettings();
+    return settings.dictionary?.cacheTtlDays ?? 2;
+  }
+
+  async purgeExpiredLookups(ttlDays?: number): Promise<number> {
+    const days = await this.resolveTtlDays(ttlDays);
+    if (days <= 0) {
+      return 0;
+    }
+    const cutoff = Date.now() - days * MS_PER_DAY;
+    return await db.wordLookups.where('timestamp').below(cutoff).delete();
+  }
+
+  async getCachedLookup(lang: string, rawText: string, ttlDays?: number): Promise<WordLookupResult | null> {
+    const normalized = normalizeLookupText(rawText);
+    if (!normalized) {
+      return null;
+    }
+    const days = await this.resolveTtlDays(ttlDays);
+    return this.getCachedResult(lang, normalized, days);
+  }
+
+  private async getCachedResult(lang: string, text: string, ttlDays: number): Promise<WordLookupResult | null> {
     const cached = await db.wordLookups
       .where('[lang+text]')
       .equals([lang, text])
@@ -123,6 +150,14 @@ export class DictionaryService {
 
     if (!cached) {
       return null;
+    }
+
+    if (ttlDays > 0) {
+      const isExpired = Date.now() - cached.timestamp > ttlDays * MS_PER_DAY;
+      if (isExpired) {
+        await db.wordLookups.where('[lang+text]').equals([lang, text]).delete();
+        return null;
+      }
     }
 
     return {
@@ -135,6 +170,8 @@ export class DictionaryService {
       source: 'cache',
     };
   }
+
+
 
   private async saveRecord(
     text: string,
@@ -168,13 +205,15 @@ export class DictionaryService {
       throw new Error('Word or phrase cannot be empty');
     }
 
-    const cached = await this.getCachedResult(params.lang, normalizedText);
+    const settings = await this.settingsService.getSettings();
+    const ttlDays = settings.dictionary?.cacheTtlDays ?? 2;
+    const cached = await this.getCachedResult(params.lang, normalizedText, ttlDays);
     if (cached) {
       return cached;
     }
 
-    const settings = await this.settingsService.getSettings();
     const apiKey = settings.translation.apiKey?.trim();
+
     if (!apiKey) {
       return {
         text: normalizedText,

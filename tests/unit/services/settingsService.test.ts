@@ -20,7 +20,10 @@ describe('SettingsService (TDD)', () => {
     expect(settings.translation.baseUrl).toBe('https://api.anthropic.com/v1');
     expect(settings.tts.provider).toBe('openai');
     expect(settings.printOptions.defaultTallyBoxes).toBe(100);
+    expect(settings.dictionary.hotkey).toBe('Alt');
+    expect(settings.dictionary.cacheTtlDays).toBe(2);
   });
+
 
   it('updates specific settings independently', async () => {
     await service.updateSettings({
@@ -40,6 +43,10 @@ describe('SettingsService (TDD)', () => {
       printOptions: {
         defaultTallyBoxes: 60,
       },
+      dictionary: {
+        hotkey: 'Meta',
+        cacheTtlDays: 7,
+      },
     });
 
     const current = await service.getSettings();
@@ -48,7 +55,10 @@ describe('SettingsService (TDD)', () => {
     expect(current.translation.baseUrl).toBe('https://my-proxy.workers.dev');
     expect(current.tts.provider).toBe('elevenlabs');
     expect(current.printOptions.defaultTallyBoxes).toBe(60);
+    expect(current.dictionary.hotkey).toBe('Meta');
+    expect(current.dictionary.cacheTtlDays).toBe(7);
   });
+
 
   it('resets settings to default values', async () => {
     await service.updateSettings({

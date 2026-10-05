@@ -113,4 +113,47 @@ describe('SettingsHub View (TDD)', () => {
       expect(document.documentElement.classList.contains('dark')).toBe(true);
     });
   });
+
+  it('renders and saves Dictionary configuration: hotkey trigger and cache retention period', async () => {
+    render(<SettingsHub onBack={vi.fn()} />);
+
+    const hotkeySelect = (await screen.findByLabelText(/Lookup Hotkey Trigger/i)) as HTMLSelectElement;
+    const ttlSelect = (await screen.findByLabelText(/Cache Retention Period/i)) as HTMLSelectElement;
+
+    expect(hotkeySelect.value).toBe('Alt');
+    expect(ttlSelect.value).toBe('2');
+
+    fireEvent.change(hotkeySelect, { target: { value: 'MetaLeft' } });
+    fireEvent.change(ttlSelect, { target: { value: '7' } });
+
+    const saveBtn = screen.getByRole('button', { name: 'Save Dictionary Settings' });
+    fireEvent.click(saveBtn);
+
+    await waitFor(async () => {
+      const saved = await settingsService.getSettings();
+      expect(saved.dictionary?.hotkey).toBe('MetaLeft');
+      expect(saved.dictionary?.cacheTtlDays).toBe(7);
+      expect(await screen.findByText('Dictionary configuration saved.')).toBeDefined();
+    });
+  });
+
+  it('clears dictionary cache when clicking Clear Dictionary Cache button', async () => {
+    await db.wordLookups.add({
+      text: 'hola',
+      lang: 'es-ES',
+      translation: 'hello',
+      timestamp: Date.now(),
+    });
+    expect(await db.wordLookups.count()).toBe(1);
+
+    render(<SettingsHub onBack={vi.fn()} />);
+
+    const clearBtn = await screen.findByRole('button', { name: /Clear Dictionary Cache/i });
+    fireEvent.click(clearBtn);
+
+    await waitFor(async () => {
+      expect(await db.wordLookups.count()).toBe(0);
+      expect(await screen.findByText('Dictionary cache cleared successfully.')).toBeDefined();
+    });
+  });
 });

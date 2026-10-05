@@ -31,7 +31,12 @@ describe('DictionaryService (TDD)', () => {
     printOptions: {
       defaultTallyBoxes: 100,
     },
+    dictionary: {
+      hotkey: 'Alt',
+      cacheTtlDays: 2,
+    },
   };
+
 
   beforeEach(async () => {
     await db.wordLookups.clear();
@@ -180,8 +185,135 @@ describe('DictionaryService (TDD)', () => {
         source: 'cache',
       });
       expect(fetchSpy).not.toHaveBeenCalled();
-      expect(mockGetSettings).not.toHaveBeenCalled();
     });
+
+    it('treats expired cached entry as cache miss and deletes stale record', async () => {
+      // 3 days old (expired since default cacheTtlDays is 2)
+      const threeDaysAgo = Date.now() - 3 * 24 * 60 * 60 * 1000;
+      await db.wordLookups.add({
+        text: 'viejo',
+        lang: 'es-ES',
+        translation: 'old',
+        timestamp: threeDaysAgo,
+      });
+
+      mockGetSettings.mockResolvedValueOnce({
+        ...defaultMockSettings,
+        translation: {
+          ...defaultMockSettings.translation,
+          apiKey: '',
+        },
+      });
+
+      const result = await service.lookupWord({ text: 'viejo', lang: 'es-ES' });
+      expect(result.source).toBe('fallback');
+
+      // Stale record should have been purged from DB
+      const record = await db.wordLookups.where('[lang+text]').equals(['es-ES', 'viejo']).first();
+      expect(record).toBeUndefined();
+    });
+
+    it('retains cached entry when cacheTtlDays is 0 or negative (indefinite retention)', async () => {
+      const tenDaysAgo = Date.now() - 10 * 24 * 60 * 60 * 1000;
+      await db.wordLookups.add({
+        text: 'siempre',
+        lang: 'es-ES',
+        translation: 'always',
+        timestamp: tenDaysAgo,
+      });
+
+      mockGetSettings.mockResolvedValueOnce({
+        ...defaultMockSettings,
+        dictionary: {
+          hotkey: 'Alt',
+          cacheTtlDays: 0,
+        },
+      });
+
+      const result = await service.lookupWord({ text: 'siempre', lang: 'es-ES' });
+      expect(result.source).toBe('cache');
+      expect(result.translation).toBe('always');
+    });
+
+    it('getCachedLookup returns valid result or null if missing or expired', async () => {
+      await db.wordLookups.add({
+        text: 'valido',
+        lang: 'es-ES',
+        translation: 'valid',
+        timestamp: Date.now(),
+      });
+      await db.wordLookups.add({
+        text: 'caducado',
+        lang: 'es-ES',
+        translation: 'expired',
+        timestamp: Date.now() - 5 * 24 * 60 * 60 * 1000,
+      });
+
+      const hit = await service.getCachedLookup('es-ES', 'valido');
+      expect(hit?.translation).toBe('valid');
+      expect(hit?.source).toBe('cache');
+
+      const miss = await service.getCachedLookup('es-ES', 'caducado');
+      expect(miss).toBeNull();
+
+      const nonExistent = await service.getCachedLookup('es-ES', 'inexistente');
+      expect(nonExistent).toBeNull();
+    });
+
+    it('getCachedLookup returns null for empty or whitespace text', async () => {
+      expect(await service.getCachedLookup('es-ES', '   ')).toBeNull();
+      expect(await service.getCachedLookup('es-ES', '')).toBeNull();
+    });
+
+    it('getCachedLookup respects explicit ttlDays argument over settings', async () => {
+      const threeDaysAgo = Date.now() - 3 * 86_400_000;
+      await db.wordLookups.add({
+        text: 'customttl',
+        lang: 'es-ES',
+        translation: 'custom ttl hit',
+        timestamp: threeDaysAgo,
+      });
+
+      const hit = await service.getCachedLookup('es-ES', 'customttl', 4);
+      expect(hit?.translation).toBe('custom ttl hit');
+
+      const miss = await service.getCachedLookup('es-ES', 'customttl', 2);
+      expect(miss).toBeNull();
+    });
+
+    it('getCachedLookup falls back to default 2 days when dictionary settings are missing', async () => {
+      const threeDaysAgo = Date.now() - 3 * 86_400_000;
+      const oneDayAgo = Date.now() - 1 * 86_400_000;
+      await db.wordLookups.add({
+        text: 'onedom',
+        lang: 'es-ES',
+        translation: 'one day',
+        timestamp: oneDayAgo,
+      });
+      await db.wordLookups.add({
+        text: 'threedom',
+        lang: 'es-ES',
+        translation: 'three days',
+        timestamp: threeDaysAgo,
+      });
+
+      mockGetSettings.mockResolvedValueOnce({
+        ...defaultMockSettings,
+        dictionary: undefined,
+      } as unknown as AppSettings);
+
+      const hit = await service.getCachedLookup('es-ES', 'onedom');
+      expect(hit?.translation).toBe('one day');
+
+      mockGetSettings.mockResolvedValueOnce({
+        ...defaultMockSettings,
+        dictionary: undefined,
+      } as unknown as AppSettings);
+
+      const miss = await service.getCachedLookup('es-ES', 'threedom');
+      expect(miss).toBeNull();
+    });
+
 
     it('returns fallback result when translation API key is not configured or whitespace', async () => {
       mockGetSettings.mockResolvedValueOnce({
@@ -363,4 +495,111 @@ describe('DictionaryService (TDD)', () => {
       expect(await db.wordLookups.count()).toBe(0);
     });
   });
+
+  describe('purgeExpiredLookups', () => {
+    it('deletes entries older than ttl cutoff and returns deleted count', async () => {
+      const now = Date.now();
+      const freshTime = now - 1 * 24 * 60 * 60 * 1000; // 1 day old
+      const expiredTime = now - 4 * 24 * 60 * 60 * 1000; // 4 days old
+
+      await db.wordLookups.add({
+        text: 'fresh',
+        lang: 'en',
+        translation: 'fresh word',
+        timestamp: freshTime,
+      });
+      await db.wordLookups.add({
+        text: 'stale',
+        lang: 'en',
+        translation: 'stale word',
+        timestamp: expiredTime,
+      });
+
+      const deletedCount = await service.purgeExpiredLookups(2);
+      expect(deletedCount).toBe(1);
+      expect(await db.wordLookups.count()).toBe(1);
+
+      const remaining = await db.wordLookups.toCollection().first();
+      expect(remaining?.text).toBe('fresh');
+    });
+
+    it('does not delete any entries if ttlDays is 0 or negative', async () => {
+      await db.wordLookups.add({
+        text: 'ancient',
+        lang: 'en',
+        translation: 'ancient',
+        timestamp: Date.now() - 365 * 24 * 60 * 60 * 1000,
+      });
+
+      const deletedCount = await service.purgeExpiredLookups(0);
+      expect(deletedCount).toBe(0);
+
+      const deletedNegative = await service.purgeExpiredLookups(-1);
+      expect(deletedNegative).toBe(0);
+      expect(await db.wordLookups.count()).toBe(1);
+    });
+
+    it('uses configured cacheTtlDays from settings when ttlDays parameter is omitted', async () => {
+      const now = Date.now();
+      const threeDaysAgo = now - 3 * 86_400_000;
+      const fiveDaysAgo = now - 5 * 86_400_000;
+
+      await db.wordLookups.add({
+        text: 'three',
+        lang: 'en',
+        translation: 'three',
+        timestamp: threeDaysAgo,
+      });
+      await db.wordLookups.add({
+        text: 'five',
+        lang: 'en',
+        translation: 'five',
+        timestamp: fiveDaysAgo,
+      });
+
+      mockGetSettings.mockResolvedValueOnce({
+        ...defaultMockSettings,
+        dictionary: {
+          hotkey: 'Alt',
+          cacheTtlDays: 4,
+        },
+      });
+
+      const deletedCount = await service.purgeExpiredLookups();
+      expect(deletedCount).toBe(1);
+      expect(await db.wordLookups.count()).toBe(1);
+      const remaining = await db.wordLookups.where('[lang+text]').equals(['en', 'three']).first();
+      expect(remaining).toBeDefined();
+    });
+
+    it('falls back to default 2 days when ttlDays is omitted and settings dictionary is undefined', async () => {
+      const now = Date.now();
+      const oneDayAgo = now - 1 * 86_400_000;
+      const threeDaysAgo = now - 3 * 86_400_000;
+
+      await db.wordLookups.add({
+        text: 'one',
+        lang: 'en',
+        translation: 'one',
+        timestamp: oneDayAgo,
+      });
+      await db.wordLookups.add({
+        text: 'three_fallback',
+        lang: 'en',
+        translation: 'three',
+        timestamp: threeDaysAgo,
+      });
+
+      mockGetSettings.mockResolvedValueOnce({
+        ...defaultMockSettings,
+        dictionary: undefined,
+      } as unknown as AppSettings);
+
+      const deletedCount = await service.purgeExpiredLookups();
+      expect(deletedCount).toBe(1);
+      const remaining = await db.wordLookups.where('[lang+text]').equals(['en', 'one']).first();
+      expect(remaining).toBeDefined();
+    });
+  });
+
 });

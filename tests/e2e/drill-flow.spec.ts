@@ -299,5 +299,65 @@ test.describe('TalkDrill E2E Journeys', () => {
     await drillCapsuleBtn.click();
     await expect(dialog).not.toBeVisible();
   });
+
+  test('E2E-SCN-007: Word Selection Pending Trigger & Settings Configuration', async ({ page }) => {
+    // 1. Open Settings
+    await page.getByRole('button', { name: 'Settings' }).click();
+    await expect(page.getByText('Settings & Integrations')).toBeVisible();
+    await expect(page.getByText('Word Lookup & Dictionary')).toBeVisible();
+
+    // 2. Configure hotkey to Key D and TTL to 7 Days
+    const hotkeySelect = page.getByLabel('Lookup Hotkey Trigger');
+    await hotkeySelect.selectOption('KeyD');
+    const ttlSelect = page.getByLabel('Cache Retention Period');
+    await ttlSelect.selectOption('7');
+
+    await page.getByRole('button', { name: 'Save Dictionary Settings' }).click();
+    await expect(page.getByText('Dictionary configuration saved.')).toBeVisible();
+
+    // 3. Clear dictionary cache button
+    await page.getByRole('button', { name: 'Clear Dictionary Cache' }).click();
+    await expect(page.getByText('Dictionary cache cleared successfully.')).toBeVisible();
+
+    // 4. Return to Library and create drill
+    await page.getByRole('button', { name: 'Back' }).click();
+    await page.getByRole('button', { name: 'Create First Drill' }).click();
+    await page.getByRole('button', { name: 'Direct Foreign Text' }).click();
+    await page.getByPlaceholder('Enter drill title (optional)').fill('Pending Trigger Drill');
+    await page.getByPlaceholder('Enter or paste foreign text here...').fill('¿Nos cobras, por favor?');
+    await page.getByRole('button', { name: 'Save and Start Drill' }).click();
+
+    await expect(page.getByText('Pending Trigger Drill')).toBeVisible();
+    await expect(page.getByText('¿Nos cobras, por favor?')).toBeVisible();
+
+    // 5. Select uncached word 'favor'
+    await page.evaluate(() => {
+      const targetEl = document.querySelector('p.select-text');
+      if (targetEl && targetEl.firstChild) {
+        const range = document.createRange();
+        // Select 'favor' (characters 17 to 22 in '¿Nos cobras, por favor?')
+        range.setStart(targetEl.firstChild, 17);
+        range.setEnd(targetEl.firstChild, 22);
+        const sel = window.getSelection();
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+        targetEl.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+      }
+    });
+
+    // 6. Verify Popover is in pending trigger state showing configured hotkey 'Key D'
+    const dialog = page.getByRole('dialog', { name: 'Word Definition' });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByText('favor')).toBeVisible();
+    await expect(dialog.getByText('Key D')).toBeVisible();
+    const triggerBtn = dialog.getByRole('button', { name: 'Look Up with AI' });
+    await expect(triggerBtn).toBeVisible();
+
+    // 7. Click trigger button to initiate AI lookup
+    await triggerBtn.click();
+    await expect(
+      dialog.getByText('Configure Anthropic API Key in Settings for AI definitions.')
+    ).toBeVisible();
+  });
 });
 

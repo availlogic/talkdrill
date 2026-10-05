@@ -9,10 +9,13 @@ export interface WordLookupPopoverProps {
   x: number;
   y: number;
   loading: boolean;
+  isPendingTrigger?: boolean | undefined;
+  hotkeyLabel?: string | undefined;
+  onTriggerLookup?: (() => void) | undefined;
   result: WordLookupResult | null;
   error: string | null;
   onClose: () => void;
-  onSpeak?: (text: string, lang: string) => void;
+  onSpeak?: ((text: string, lang: string) => void) | undefined;
 }
 
 export function calculatePopoverPosition(
@@ -102,13 +105,48 @@ const DefinitionContent: React.FC<{ result: WordLookupResult }> = ({ result }) =
   </div>
 );
 
+interface PendingTriggerProps {
+  hotkeyLabel?: string | undefined;
+  onTriggerLookup?: (() => void) | undefined;
+}
+
+const PendingTriggerView: React.FC<PendingTriggerProps> = ({
+  hotkeyLabel = 'Option / Alt',
+  onTriggerLookup,
+}) => (
+  <div className="py-2.5 px-1 space-y-2 text-center">
+    <p className="text-xs text-stone-600 dark:text-stone-300">
+      Press <kbd className="px-1.5 py-0.5 text-[11px] font-semibold font-mono bg-stone-100 dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded shadow-sm text-stone-800 dark:text-stone-200">{hotkeyLabel}</kbd> or click below to query AI
+    </p>
+    {onTriggerLookup && (
+      <button
+        type="button"
+        onClick={onTriggerLookup}
+        className="w-full py-1.5 px-3 rounded-lg text-xs font-medium bg-amber-600 hover:bg-amber-700 text-white dark:bg-amber-500 dark:hover:bg-amber-600 transition shadow-sm"
+      >
+        Look Up with AI
+      </button>
+    )}
+  </div>
+);
+
 interface BodyProps {
   loading: boolean;
+  isPendingTrigger?: boolean | undefined;
+  hotkeyLabel?: string | undefined;
+  onTriggerLookup?: (() => void) | undefined;
   result: WordLookupResult | null;
   error: string | null;
 }
 
-const PopoverBody: React.FC<BodyProps> = ({ loading, result, error }) => {
+const PopoverBody: React.FC<BodyProps> = ({
+  loading,
+  isPendingTrigger,
+  hotkeyLabel,
+  onTriggerLookup,
+  result,
+  error,
+}) => {
   if (loading) {
     return (
       <div className="flex items-center gap-2 py-4 justify-center text-xs text-stone-500 dark:text-stone-400">
@@ -119,6 +157,9 @@ const PopoverBody: React.FC<BodyProps> = ({ loading, result, error }) => {
   }
   if (error) {
     return <div className="py-2 text-xs text-rose-600 dark:text-rose-400">{error}</div>;
+  }
+  if (isPendingTrigger) {
+    return <PendingTriggerView hotkeyLabel={hotkeyLabel} onTriggerLookup={onTriggerLookup} />;
   }
   return result ? <DefinitionContent result={result} /> : null;
 };
@@ -146,6 +187,9 @@ export const WordLookupPopover: React.FC<WordLookupPopoverProps> = ({
   x,
   y,
   loading,
+  isPendingTrigger,
+  hotkeyLabel,
+  onTriggerLookup,
   result,
   error,
   onClose,
@@ -164,7 +208,14 @@ export const WordLookupPopover: React.FC<WordLookupPopoverProps> = ({
       className="fixed z-50 w-72 sm:w-80 max-w-[calc(100vw-24px)] rounded-xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-3 shadow-2xl shadow-stone-900/10 dark:shadow-stone-950/40 animate-in fade-in zoom-in-95 duration-100"
     >
       <PopoverHeader word={word} lang={lang} ipa={result?.ipa} onClose={onClose} onSpeak={onSpeak} />
-      <PopoverBody loading={loading} result={result} error={error} />
+      <PopoverBody
+        loading={loading}
+        isPendingTrigger={isPendingTrigger}
+        hotkeyLabel={hotkeyLabel}
+        onTriggerLookup={onTriggerLookup}
+        result={result}
+        error={error}
+      />
     </div>
   );
 };

@@ -12,6 +12,7 @@ import { NumericOverrideModal } from '../components/NumericOverrideModal';
 import { PrintExportModal } from '../views/PrintExportModal';
 import { WordLookupPopover } from '../components/WordLookupPopover';
 import { useWordLookup } from '../hooks/useWordLookup';
+import { DictionaryService } from '../services/dictionaryService';
 import { type Article, type MilestoneResult, type PlayerState } from '../types/models';
 
 export interface DrillWorkspaceProps {
@@ -59,7 +60,7 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [activeMilestone, setActiveMilestone] = useState<MilestoneResult | null>(null);
 
-  const { lookupState, handleSelectionLookup, closeLookup } = useWordLookup();
+  const { lookupState, handleSelectionLookup, triggerLookup, closeLookup, hotkeyLabel } = useWordLookup();
 
   const handleTargetMouseUp = useCallback(() => {
     if (article) {
@@ -109,6 +110,7 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
   useEffect(() => {
     let unmounted = false;
     resetLoopState();
+    new DictionaryService().purgeExpiredLookups().catch(() => {});
 
     corpusService.getArticle(articleId).then((art) => {
       if (!unmounted && art) {
@@ -473,6 +475,9 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
           x={lookupState.x}
           y={lookupState.y}
           loading={lookupState.loading}
+          isPendingTrigger={lookupState.isPendingTrigger}
+          hotkeyLabel={hotkeyLabel}
+          onTriggerLookup={triggerLookup}
           result={lookupState.result}
           error={lookupState.error}
           onClose={closeLookup}
