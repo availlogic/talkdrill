@@ -206,6 +206,28 @@ describe('WordLookupPopover (TDD)', () => {
       expect(handleSpeak).toHaveBeenCalledWith('hola', 'es-ES');
     });
 
+    it('forwards voiceURI to onSpeak when voiceURI is provided', () => {
+      const handleSpeak = vi.fn();
+      render(
+        <WordLookupPopover
+          word="hola"
+          lang="es-ES"
+          voiceURI="es-voice-1"
+          x={100}
+          y={150}
+          loading={false}
+          result={null}
+          error={null}
+          onClose={vi.fn()}
+          onSpeak={handleSpeak}
+        />
+      );
+
+      const speakBtn = screen.getByLabelText('Listen to pronunciation');
+      fireEvent.click(speakBtn);
+      expect(handleSpeak).toHaveBeenCalledWith('hola', 'es-ES', 'es-voice-1');
+    });
+
     it('calls onClose when Escape key is pressed', () => {
       const handleClose = vi.fn();
       render(

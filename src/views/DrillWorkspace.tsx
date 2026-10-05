@@ -60,7 +60,7 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [activeMilestone, setActiveMilestone] = useState<MilestoneResult | null>(null);
 
-  const { lookupState, handleSelectionLookup, triggerLookup, closeLookup, hotkeyLabel } = useWordLookup();
+  const { lookupState, handleSelectionLookup, triggerLookup, closeLookup, hotkeyLabel, voiceURI } = useWordLookup();
 
   const handleTargetMouseUp = useCallback(() => {
     if (article) {
@@ -472,6 +472,7 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
         <WordLookupPopover
           word={lookupState.word}
           lang={lookupState.lang}
+          voiceURI={voiceURI}
           x={lookupState.x}
           y={lookupState.y}
           loading={lookupState.loading}

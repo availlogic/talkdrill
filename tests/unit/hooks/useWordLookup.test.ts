@@ -27,6 +27,7 @@ describe('useWordLookup hook (TDD)', () => {
       defaultTallyBoxes: 60,
     },
     dictionary: {
+      voiceURI: '',
       hotkey: 'Alt',
       cacheTtlDays: 2,
     },
@@ -449,6 +450,24 @@ describe('useWordLookup hook (TDD)', () => {
         await Promise.resolve();
       });
       expect(result.current.hotkeyLabel).toBe('Left Command ⌘');
+    });
+
+    it('loads voiceURI from dictionary settings', async () => {
+      const customSettingsService: SettingsReader = {
+        getSettings: vi.fn().mockResolvedValue({
+          ...defaultMockSettings,
+          dictionary: {
+            hotkey: 'Alt',
+            cacheTtlDays: 2,
+            voiceURI: 'es-voice-monica',
+          },
+        }),
+      };
+      const { result } = renderHook(() => useWordLookup(mockDictionaryService, customSettingsService));
+      await act(async () => {
+        await Promise.resolve();
+      });
+      expect(result.current.voiceURI).toBe('es-voice-monica');
     });
 
     it('does nothing when triggerLookup is called while popover is closed or word is empty', async () => {

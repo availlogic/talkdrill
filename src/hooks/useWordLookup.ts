@@ -96,12 +96,16 @@ export function useWordLookup(
 ) {
   const [lookupState, setLookupState] = useState<WordLookupState>(INITIAL_LOOKUP_STATE);
   const [hotkey, setHotkey] = useState<string>('Alt');
+  const [voiceURI, setVoiceURI] = useState<string>('');
   const contextSentenceRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     customSettingsService.getSettings().then((s) => {
       if (s.dictionary?.hotkey) {
         setHotkey(s.dictionary.hotkey);
+      }
+      if (s.dictionary?.voiceURI !== undefined) {
+        setVoiceURI(s.dictionary.voiceURI);
       }
     });
   }, [customSettingsService]);
@@ -171,5 +175,6 @@ export function useWordLookup(
     triggerLookup,
     closeLookup,
     hotkeyLabel: getHotkeyDisplayLabel(hotkey),
+    voiceURI,
   };
 }

@@ -306,7 +306,11 @@ test.describe('TalkDrill E2E Journeys', () => {
     await expect(page.getByText('Settings & Integrations')).toBeVisible();
     await expect(page.getByText('Word Lookup & Dictionary')).toBeVisible();
 
-    // 2. Configure hotkey to Key D and TTL to 7 Days
+    // 2. Verify Pronunciation Voice is visible as first item, and configure hotkey to Key D and TTL to 7 Days
+    const voiceSelect = page.getByLabel(/Pronunciation Voice/i);
+    await expect(voiceSelect).toBeVisible();
+    await voiceSelect.selectOption({ index: 0 });
+
     const hotkeySelect = page.getByLabel('Lookup Hotkey Trigger');
     await hotkeySelect.selectOption('KeyD');
     const ttlSelect = page.getByLabel('Cache Retention Period');

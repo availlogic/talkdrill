@@ -1,12 +1,69 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { SettingsHub } from '../../../src/views/SettingsHub';
 import { settingsService } from '../../../src/services/settingsService';
 import { db } from '../../../src/storage/db';
 
 describe('SettingsHub View (TDD)', () => {
+  const originalSpeechSynthesis = window.speechSynthesis;
+  const originalUtterance = window.SpeechSynthesisUtterance;
+  let mockSpeak: ReturnType<typeof vi.fn>;
+  let mockCancel: ReturnType<typeof vi.fn>;
+  let mockGetVoices: ReturnType<typeof vi.fn>;
+
+  const dummyVoices = [
+    { voiceURI: 'es-voice-1', name: 'Monica', lang: 'es-ES', default: true },
+    { voiceURI: 'en-voice-1', name: 'Samantha', lang: 'en-US', default: false },
+  ];
+
   beforeEach(async () => {
     await db.settings.clear();
+
+    mockSpeak = vi.fn();
+    mockCancel = vi.fn();
+    mockGetVoices = vi.fn().mockReturnValue(dummyVoices);
+
+    const mockSynth = {
+      speak: mockSpeak,
+      cancel: mockCancel,
+      getVoices: mockGetVoices,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    };
+
+    class MockUtterance {
+      text: string;
+      lang = '';
+      voice: unknown = null;
+      constructor(text: string) {
+        this.text = text;
+      }
+    }
+
+    Object.defineProperty(window, 'speechSynthesis', {
+      value: mockSynth,
+      writable: true,
+      configurable: true,
+    });
+
+    Object.defineProperty(window, 'SpeechSynthesisUtterance', {
+      value: MockUtterance,
+      writable: true,
+      configurable: true,
+    });
+  });
+
+  afterEach(() => {
+    Object.defineProperty(window, 'speechSynthesis', {
+      value: originalSpeechSynthesis,
+      writable: true,
+      configurable: true,
+    });
+    Object.defineProperty(window, 'SpeechSynthesisUtterance', {
+      value: originalUtterance,
+      writable: true,
+      configurable: true,
+    });
   });
 
   it('renders decoupled Translation and theme settings without TTS form in current version', async () => {
@@ -155,5 +212,44 @@ describe('SettingsHub View (TDD)', () => {
       expect(await db.wordLookups.count()).toBe(0);
       expect(await screen.findByText('Dictionary cache cleared successfully.')).toBeDefined();
     });
+  });
+
+  it('renders pronunciation voice select as the FIRST item in Word Lookup & Dictionary, and saves selected voice', async () => {
+    render(<SettingsHub onBack={vi.fn()} />);
+
+    const voiceSelect = (await screen.findByLabelText(/Pronunciation Voice/i)) as HTMLSelectElement;
+    const hotkeySelect = (await screen.findByLabelText(/Lookup Hotkey Trigger/i)) as HTMLSelectElement;
+    const ttlSelect = (await screen.findByLabelText(/Cache Retention Period/i)) as HTMLSelectElement;
+
+    // Verify DOM order: Voice precedes Hotkey, Hotkey precedes Cache TTL
+    expect(voiceSelect.compareDocumentPosition(hotkeySelect) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(hotkeySelect.compareDocumentPosition(ttlSelect) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    expect(voiceSelect.value).toBe('');
+    fireEvent.change(voiceSelect, { target: { value: 'es-voice-1' } });
+    expect(voiceSelect.value).toBe('es-voice-1');
+
+    const saveBtn = screen.getByRole('button', { name: 'Save Dictionary Settings' });
+    fireEvent.click(saveBtn);
+
+    await waitFor(async () => {
+      const saved = await settingsService.getSettings();
+      expect(saved.dictionary?.voiceURI).toBe('es-voice-1');
+      expect(await screen.findByText('Dictionary configuration saved.')).toBeDefined();
+    });
+  });
+
+  it('allows testing the selected pronunciation voice with Play Sample button', async () => {
+    render(<SettingsHub onBack={vi.fn()} />);
+
+    const voiceSelect = (await screen.findByLabelText(/Pronunciation Voice/i)) as HTMLSelectElement;
+    fireEvent.change(voiceSelect, { target: { value: 'es-voice-1' } });
+
+    const playBtn = await screen.findByRole('button', { name: /Play Sample|Test Voice/i });
+    fireEvent.click(playBtn);
+
+    expect(mockSpeak).toHaveBeenCalledTimes(1);
+    const utterance = mockSpeak.mock.calls[0][0];
+    expect(utterance.voice).toEqual(dummyVoices[0]);
   });
 });

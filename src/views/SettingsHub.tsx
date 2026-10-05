@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Save, AlertTriangle, Shield, Sun, Moon, Laptop, BookOpen, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, AlertTriangle, Shield, Sun, Moon, Laptop, BookOpen, Trash2, Volume2 } from 'lucide-react';
 import { settingsService } from '../services/settingsService';
 import { DictionaryService } from '../services/dictionaryService';
 import { themeManager } from '../utils/themeManager';
+import { speakText } from '../utils/speechHelper';
 import { type AppSettings } from '../types/models';
 
 export interface SettingsHubProps {
@@ -13,14 +14,35 @@ export const SettingsHub: React.FC<SettingsHubProps> = ({ onBack }) => {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [purgeConfirmText, setPurgeConfirmText] = useState('');
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [browserVoices, setBrowserVoices] = useState<SpeechSynthesisVoice[]>([]);
 
   useEffect(() => {
     settingsService.getSettings().then(setSettings);
   }, []);
 
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+    const synth = window.speechSynthesis;
+
+    const updateVoices = () => {
+      setBrowserVoices(synth.getVoices ? synth.getVoices() : []);
+    };
+
+    updateVoices();
+    synth.addEventListener?.('voiceschanged', updateVoices);
+    return () => {
+      synth.removeEventListener?.('voiceschanged', updateVoices);
+    };
+  }, []);
+
   if (!settings) {
     return <div className="p-8 text-center text-slate-500">Loading settings...</div>;
   }
+
+  const handleTestVoice = () => {
+    const voiceURI = settings.dictionary?.voiceURI;
+    speakText('Hello! This is a pronunciation test.', 'en-US', voiceURI);
+  };
 
   const handleSaveTranslation = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -238,6 +260,53 @@ export const SettingsHub: React.FC<SettingsHubProps> = ({ onBack }) => {
         </p>
 
         <div className="space-y-3">
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label htmlFor="dict-voice" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Pronunciation Voice (Browser Speech)
+              </label>
+              <button
+                type="button"
+                aria-label="Play Sample"
+                onClick={handleTestVoice}
+                className="text-xs text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 flex items-center gap-1 font-medium transition cursor-pointer"
+              >
+                <Volume2 className="w-3.5 h-3.5" />
+                <span>Play Sample</span>
+              </button>
+            </div>
+            <select
+              id="dict-voice"
+              value={settings.dictionary?.voiceURI ?? ''}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  dictionary: {
+                    ...(settings.dictionary ?? { hotkey: 'Alt', cacheTtlDays: 2 }),
+                    voiceURI: e.target.value,
+                  },
+                })
+              }
+              className="w-full text-sm p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+            >
+              <option value="">System Default (Auto-detect by language)</option>
+              {browserVoices.map((v) => (
+                <option key={v.voiceURI} value={v.voiceURI}>
+                  {v.name} ({v.lang}){v.default ? ' [Default]' : ''}
+                </option>
+              ))}
+              {settings.dictionary?.voiceURI &&
+                !browserVoices.some((v) => v.voiceURI === settings.dictionary?.voiceURI) && (
+                  <option value={settings.dictionary.voiceURI}>
+                    {settings.dictionary.voiceURI} (Unavailable)
+                  </option>
+                )}
+            </select>
+            <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+              Select the browser voice used to pronounce selected words in the lookup popup.
+            </p>
+          </div>
+
           <div>
             <label htmlFor="dict-hotkey" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
               Lookup Hotkey Trigger

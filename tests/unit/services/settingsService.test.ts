@@ -22,6 +22,7 @@ describe('SettingsService (TDD)', () => {
     expect(settings.printOptions.defaultTallyBoxes).toBe(100);
     expect(settings.dictionary.hotkey).toBe('Alt');
     expect(settings.dictionary.cacheTtlDays).toBe(2);
+    expect(settings.dictionary.voiceURI).toBe('');
   });
 
 
@@ -44,6 +45,7 @@ describe('SettingsService (TDD)', () => {
         defaultTallyBoxes: 60,
       },
       dictionary: {
+        voiceURI: 'com.apple.speech.synthesis.voice.Monica',
         hotkey: 'Meta',
         cacheTtlDays: 7,
       },
@@ -55,6 +57,7 @@ describe('SettingsService (TDD)', () => {
     expect(current.translation.baseUrl).toBe('https://my-proxy.workers.dev');
     expect(current.tts.provider).toBe('elevenlabs');
     expect(current.printOptions.defaultTallyBoxes).toBe(60);
+    expect(current.dictionary.voiceURI).toBe('com.apple.speech.synthesis.voice.Monica');
     expect(current.dictionary.hotkey).toBe('Meta');
     expect(current.dictionary.cacheTtlDays).toBe(7);
   });

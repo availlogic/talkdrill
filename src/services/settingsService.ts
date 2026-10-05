@@ -20,6 +20,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     defaultTallyBoxes: 100,
   },
   dictionary: {
+    voiceURI: '',
     hotkey: 'Alt',
     cacheTtlDays: 2,
   },

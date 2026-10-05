@@ -44,6 +44,7 @@ export interface DrillLog {
 export type ThemePreference = 'system' | 'light' | 'dark';
 
 export interface DictionaryConfig {
+  voiceURI?: string | undefined;
   hotkey: string;
   cacheTtlDays: number;
 }

@@ -1,18 +1,56 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { DrillWorkspace } from '../../../src/views/DrillWorkspace';
 import { db } from '../../../src/storage/db';
 import { corpusService } from '../../../src/services/corpusService';
 import { playerEngine } from '../../../src/services/playerEngine';
 import { DictionaryService } from '../../../src/services/dictionaryService';
+import { DEFAULT_SETTINGS } from '../../../src/services/settingsService';
 
 describe('DrillWorkspace View (TDD)', () => {
   let articleId: string;
+  const originalSpeechSynthesis = window.speechSynthesis;
+  const originalUtterance = window.SpeechSynthesisUtterance;
+  let mockSpeak: ReturnType<typeof vi.fn>;
+  let mockCancel: ReturnType<typeof vi.fn>;
+
+  const dummyVoices = [
+    { voiceURI: 'es-voice-1', name: 'Monica', lang: 'es-ES', default: true },
+  ];
 
   beforeEach(async () => {
+    await db.settings.clear();
     await db.articles.clear();
     await db.audios.clear();
     await db.drillLogs.clear();
+
+    mockSpeak = vi.fn();
+    mockCancel = vi.fn();
+
+    Object.defineProperty(window, 'speechSynthesis', {
+      value: {
+        speak: mockSpeak,
+        cancel: mockCancel,
+        getVoices: () => dummyVoices,
+      },
+      writable: true,
+      configurable: true,
+    });
+
+    class MockUtterance {
+      text: string;
+      lang = '';
+      voice: unknown = null;
+      constructor(text: string) {
+        this.text = text;
+      }
+    }
+
+    Object.defineProperty(window, 'SpeechSynthesisUtterance', {
+      value: MockUtterance,
+      writable: true,
+      configurable: true,
+    });
 
     const art = await corpusService.createArticle({
       title: 'Restaurante Elena',
@@ -24,6 +62,19 @@ describe('DrillWorkspace View (TDD)', () => {
       targetCount: 500,
     });
     articleId = art.id;
+  });
+
+  afterEach(() => {
+    Object.defineProperty(window, 'speechSynthesis', {
+      value: originalSpeechSynthesis,
+      writable: true,
+      configurable: true,
+    });
+    Object.defineProperty(window, 'SpeechSynthesisUtterance', {
+      value: originalUtterance,
+      writable: true,
+      configurable: true,
+    });
   });
 
   it('renders target text and BigDrillCapsule with initial count', async () => {
@@ -410,6 +461,52 @@ describe('DrillWorkspace View (TDD)', () => {
       contextSentence: undefined,
     });
     expect(await screen.findByText('/faˈβoɾ/')).toBeDefined();
+  });
+
+  it('speaks word using configured dictionary voiceURI when speaker icon is clicked', async () => {
+    await db.settings.put({
+      key: 'app_settings',
+      value: {
+        ...DEFAULT_SETTINGS,
+        dictionary: {
+          hotkey: 'Alt',
+          cacheTtlDays: 2,
+          voiceURI: 'es-voice-1',
+        },
+      },
+      updatedAt: Date.now(),
+    });
+
+    await db.wordLookups.add({
+      text: 'cobras',
+      lang: 'es-ES',
+      translation: 'charge',
+      timestamp: Date.now(),
+    });
+
+    const mockRange = {
+      getBoundingClientRect: () => ({ left: 200, bottom: 300 }),
+    };
+    vi.spyOn(window, 'getSelection').mockReturnValue({
+      rangeCount: 1,
+      isCollapsed: false,
+      toString: () => 'cobras',
+      getRangeAt: () => mockRange,
+    } as unknown as Selection);
+
+    render(<DrillWorkspace articleId={articleId} onBack={vi.fn()} />);
+
+    const targetEl = await screen.findByText('¿Nos cobras, por favor?');
+    fireEvent.mouseUp(targetEl);
+
+    expect(await screen.findByRole('dialog')).toBeDefined();
+    const speakBtn = screen.getByLabelText('Listen to pronunciation');
+    fireEvent.click(speakBtn);
+
+    expect(mockSpeak).toHaveBeenCalledTimes(1);
+    const spoken = mockSpeak.mock.calls[0][0];
+    expect(spoken.voice).toEqual(dummyVoices[0]);
+    expect(spoken.text).toBe('cobras');
   });
 });
 

@@ -6,6 +6,7 @@ import type { WordLookupResult } from '../types/models';
 export interface WordLookupPopoverProps {
   word: string;
   lang: string;
+  voiceURI?: string | undefined;
   x: number;
   y: number;
   loading: boolean;
@@ -15,7 +16,7 @@ export interface WordLookupPopoverProps {
   result: WordLookupResult | null;
   error: string | null;
   onClose: () => void;
-  onSpeak?: ((text: string, lang: string) => void) | undefined;
+  onSpeak?: ((text: string, lang: string, voiceURI?: string) => void) | undefined;
 }
 
 export function calculatePopoverPosition(
@@ -63,10 +64,10 @@ interface HeaderProps {
   lang: string;
   ipa?: string | undefined;
   onClose: () => void;
-  onSpeak: (text: string, lang: string) => void;
+  onSpeak: () => void;
 }
 
-const PopoverHeader: React.FC<HeaderProps> = ({ word, lang, ipa, onClose, onSpeak }) => (
+const PopoverHeader: React.FC<HeaderProps> = ({ word, ipa, onClose, onSpeak }) => (
   <div className="flex items-center justify-between gap-2 border-b border-stone-200 dark:border-stone-700/60 pb-2 mb-2">
     <div className="flex items-baseline gap-2 overflow-hidden">
       <span className="font-semibold text-stone-900 dark:text-stone-100 truncate text-base">
@@ -78,7 +79,7 @@ const PopoverHeader: React.FC<HeaderProps> = ({ word, lang, ipa, onClose, onSpea
         </span>
       )}
     </div>
-    <HeaderActions onSpeak={() => onSpeak(word, lang)} onClose={onClose} />
+    <HeaderActions onSpeak={onSpeak} onClose={onClose} />
   </div>
 );
 
@@ -184,6 +185,7 @@ function usePopoverDismiss(ref: React.RefObject<HTMLDivElement | null>, onClose:
 export const WordLookupPopover: React.FC<WordLookupPopoverProps> = ({
   word,
   lang,
+  voiceURI,
   x,
   y,
   loading,
@@ -193,11 +195,23 @@ export const WordLookupPopover: React.FC<WordLookupPopoverProps> = ({
   result,
   error,
   onClose,
-  onSpeak = (w, l) => speakText(w, l),
+  onSpeak,
 }) => {
   const popoverRef = useRef<HTMLDivElement>(null);
   const { top, left } = calculatePopoverPosition(x, y);
   usePopoverDismiss(popoverRef, onClose);
+
+  const handleSpeak = () => {
+    if (onSpeak) {
+      if (voiceURI) {
+        onSpeak(word, lang, voiceURI);
+      } else {
+        onSpeak(word, lang);
+      }
+    } else {
+      speakText(word, lang, voiceURI);
+    }
+  };
 
   return (
     <div
@@ -207,7 +221,7 @@ export const WordLookupPopover: React.FC<WordLookupPopoverProps> = ({
       style={{ top: `${top}px`, left: `${left}px` }}
       className="fixed z-50 w-72 sm:w-80 max-w-[calc(100vw-24px)] rounded-xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-3 shadow-2xl shadow-stone-900/10 dark:shadow-stone-950/40 animate-in fade-in zoom-in-95 duration-100"
     >
-      <PopoverHeader word={word} lang={lang} ipa={result?.ipa} onClose={onClose} onSpeak={onSpeak} />
+      <PopoverHeader word={word} lang={lang} ipa={result?.ipa} onClose={onClose} onSpeak={handleSpeak} />
       <PopoverBody
         loading={loading}
         isPendingTrigger={isPendingTrigger}
