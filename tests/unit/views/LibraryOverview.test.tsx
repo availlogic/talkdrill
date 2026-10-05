@@ -45,7 +45,8 @@ describe('LibraryOverview View (TDD)', () => {
     render(<LibraryOverview onSelectArticle={vi.fn()} onNewArticle={vi.fn()} onOpenSettings={vi.fn()} />);
 
     expect(await screen.findByText('Restaurante en Madrid')).toBeDefined();
-    expect(screen.getByText('es-ES')).toBeDefined();
+    const langBadge = screen.getByText('es-ES');
+    expect(langBadge.className).not.toContain('uppercase');
     expect(screen.getByText('0 / 500 reps')).toBeDefined();
   });
 

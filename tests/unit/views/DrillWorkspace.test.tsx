@@ -28,6 +28,8 @@ describe('DrillWorkspace View (TDD)', () => {
     render(<DrillWorkspace articleId={articleId} onBack={vi.fn()} />);
 
     expect(await screen.findByText('¿Nos cobras, por favor?')).toBeDefined();
+    const langBadge = screen.getByText('es-ES');
+    expect(langBadge.className).not.toContain('uppercase');
     expect(screen.getByRole('button', { name: /drill \+1/i })).toBeDefined();
   });
 

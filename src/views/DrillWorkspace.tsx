@@ -154,7 +154,7 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
               <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 line-clamp-1">
                 {article.title}
               </h2>
-              <span className="text-[10px] font-mono text-slate-500 uppercase">{article.targetLang}</span>
+              <span className="text-[10px] font-mono text-slate-500">{article.targetLang}</span>
             </div>
           </div>
 

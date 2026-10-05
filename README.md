@@ -61,6 +61,8 @@ TalkDrill 专为高频肌肉记忆特训而生：
 6. **无障碍与 WCAG AAA 顶级对比度 (WCAG AAA High Contrast & Dual Themes)**：
    - 完整支持 Light（明亮纸质感）、Dark（深沉石墨黑）与 System（系统自适应）三大主题模式。
    - 消除低对比度与刺眼失衡缺陷，正文标题对比度高达 16.5:1 (Light) 与 19.8:1 (Dark)，存储徽章等组件对比度 > 9:1，完全超越 WCAG AAA 顶级标准。
+7. **标准 BCP-47 规范区域语言标识 (Standard BCP-47 Canonical Locales)**：
+   - 篇目卡片与特训工作区标签严格展示标准 BCP-47 规范（如 `es-ES`, `en-US`, `ja-JP` 等小写语言代码与大写地区代码组合），保持国际标准语义严谨性与直观认知。
 
 ---
 
