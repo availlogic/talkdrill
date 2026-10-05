@@ -9,7 +9,7 @@ import { BigDrillCapsule } from '../components/BigDrillCapsule';
 import { AudioPlayerBar } from '../components/AudioPlayerBar';
 import { NumericOverrideModal } from '../components/NumericOverrideModal';
 import { PrintExportModal } from '../views/PrintExportModal';
-import { type Article, type MilestoneResult } from '../types/models';
+import { type Article, type MilestoneResult, type PlayerState } from '../types/models';
 
 export interface DrillWorkspaceProps {
   articleId: string;
@@ -37,9 +37,37 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
   const loopStartRef = useRef<number | null>(null);
   const loopEndRef = useRef<number | null>(null);
 
+  const resetLoopState = useCallback(() => {
+    loopStartRef.current = null;
+    loopEndRef.current = null;
+    setLoopStart(null);
+    setLoopEnd(null);
+    setIsLooping(false);
+    playerEngine.clearLoopRegion();
+  }, []);
+
+  const handlePlayerStateUpdate = useCallback((state: PlayerState) => {
+    setIsPlaying(state.isPlaying);
+    setCurrentTime(state.currentTime);
+    setDuration(state.duration);
+    setPlaybackRate(state.playbackRate);
+    setIsLooping(state.loopRegion?.isActive ?? false);
+    if (state.loopRegion) {
+      loopStartRef.current = state.loopRegion.startSec;
+      loopEndRef.current = state.loopRegion.endSec;
+      setLoopStart(state.loopRegion.startSec);
+      setLoopEnd(state.loopRegion.endSec);
+    } else {
+      setLoopStart(loopStartRef.current);
+      setLoopEnd(loopEndRef.current);
+    }
+  }, []);
+
   // Load article, count and audio
   useEffect(() => {
     let unmounted = false;
+    resetLoopState();
+
     corpusService.getArticle(articleId).then((art) => {
       if (!unmounted && art) {
         setArticle(art);
@@ -50,15 +78,7 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
     });
 
     const unsubPlayer = playerEngine.subscribe((state) => {
-      if (!unmounted) {
-        setIsPlaying(state.isPlaying);
-        setCurrentTime(state.currentTime);
-        setDuration(state.duration);
-        setPlaybackRate(state.playbackRate);
-        setIsLooping(state.loopRegion?.isActive ?? false);
-        setLoopStart(state.loopRegion?.startSec ?? null);
-        setLoopEnd(state.loopRegion?.endSec ?? null);
-      }
+      if (!unmounted) handlePlayerStateUpdate(state);
     });
 
     audioService.getAudioByArticleId(articleId).then((item) => {
@@ -83,7 +103,7 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
       drillCounterService.flushPendingSaves();
       playerEngine.destroy();
     };
-  }, [articleId]);
+  }, [articleId, handlePlayerStateUpdate, resetLoopState]);
 
   const handleIncrement = useCallback(() => {
     const next = drillCounterService.increment(articleId);
@@ -176,13 +196,8 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
   }, [currentTime]);
 
   const handleClearLoop = useCallback(() => {
-    loopStartRef.current = null;
-    loopEndRef.current = null;
-    setLoopStart(null);
-    setLoopEnd(null);
-    setIsLooping(false);
-    playerEngine.clearLoopRegion();
-  }, []);
+    resetLoopState();
+  }, [resetLoopState]);
 
   const renderAudioPlayerBar = () => {
     if (!audioUrl) return null;

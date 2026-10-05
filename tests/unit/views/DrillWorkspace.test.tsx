@@ -171,10 +171,22 @@ describe('DrillWorkspace View (TDD)', () => {
 
     // Should immediately display A reference info and Clear loop button
     expect(await screen.findByText(/A: \[/i)).toBeDefined();
-    const clearLoopBtn = screen.getByRole('button', { name: 'Clear loop' });
-    expect(clearLoopBtn).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Clear loop' })).toBeDefined();
 
-    // User can cancel A immediately without selecting B
+    // Reproduce bug: Drag slider or seek forward to find point B
+    fireEvent.change(slider, { target: { value: '15' } });
+
+    // A reference and Clear loop button MUST persist while dragging or playing audio!
+    expect(screen.getByText(/A: \[/i)).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Clear loop' })).toBeDefined();
+
+    // Verify seeking with jump buttons also preserves A reference
+    fireEvent.click(screen.getByRole('button', { name: 'Forward 2s' }));
+    expect(screen.getByText(/A: \[/i)).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Clear loop' })).toBeDefined();
+
+    // User can still cancel A after dragging slider or jumping
+    const clearLoopBtn = screen.getByRole('button', { name: 'Clear loop' });
     fireEvent.click(clearLoopBtn);
     expect(screen.queryByText(/A: \[/i)).toBeNull();
 
