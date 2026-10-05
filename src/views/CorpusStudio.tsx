@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Sparkles, Upload, Volume2, Play, Check } from 'lucide-react';
 import { corpusService } from '../services/corpusService';
 import { translationService } from '../services/translationService';
@@ -9,18 +9,47 @@ import { type LanguageMode } from '../types/models';
 export interface CorpusStudioProps {
   onCancel: () => void;
   onStartDrill: (articleId: string) => void;
+  editArticleId?: string;
 }
 
-export const CorpusStudio: React.FC<CorpusStudioProps> = ({ onCancel, onStartDrill }) => {
+export const CorpusStudio: React.FC<CorpusStudioProps> = ({ onCancel, onStartDrill, editArticleId }) => {
   const [mode, setMode] = useState<LanguageMode>('direct_foreign');
   const [title, setTitle] = useState('');
   const [sourceText, setSourceText] = useState('');
   const [targetText, setTargetText] = useState('');
+  const [sourceLang, setSourceLang] = useState('en-US');
   const [targetLang, setTargetLang] = useState('es-ES');
   const [targetCount, setTargetCount] = useState<number>(500);
   const [translating, setTranslating] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [audioChanged, setAudioChanged] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!editArticleId) return;
+    let unmounted = false;
+    corpusService.getArticle(editArticleId).then((art) => {
+      if (!unmounted && art) {
+        setTitle(art.title);
+        setSourceText(art.sourceText);
+        setTargetText(art.targetText);
+        setTargetLang(art.targetLang);
+        if (art.sourceLang) setSourceLang(art.sourceLang);
+        setTargetCount(art.targetCount);
+        setMode(art.mode);
+      }
+    });
+
+    audioService.getAudioByArticleId(editArticleId).then((item) => {
+      if (!unmounted && item) {
+        setAudioBlob(item.blob);
+      }
+    });
+
+    return () => {
+      unmounted = true;
+    };
+  }, [editArticleId]);
 
   const handleTranslate = async () => {
     if (!sourceText.trim()) return;
@@ -30,7 +59,7 @@ export const CorpusStudio: React.FC<CorpusStudioProps> = ({ onCancel, onStartDri
       const settings = await settingsService.getSettings();
       const result = await translationService.translate({
         sourceText,
-        sourceLang: 'zh-CN',
+        sourceLang: mode === 'translate_needed' ? sourceLang : 'auto',
         targetLang,
         apiKey: settings.translation.apiKey || 'mock-key',
         baseUrl: settings.translation.baseUrl,
@@ -64,34 +93,70 @@ export const CorpusStudio: React.FC<CorpusStudioProps> = ({ onCancel, onStartDri
     try {
       const blob = await audioService.processLocalAudioUpload(file);
       setAudioBlob(blob);
+      setAudioChanged(true);
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Audio upload failed.');
     }
   };
 
+  const handleAudioRemove = () => {
+    setAudioBlob(null);
+    setAudioChanged(true);
+  };
+
+  const saveExistingDrill = async (id: string, finalTarget: string) => {
+    await corpusService.updateArticle(id, {
+      title: title.trim() || 'Untitled Drill',
+      sourceText: mode === 'translate_needed' ? sourceText.trim() : '',
+      targetText: finalTarget,
+      sourceLang: mode === 'translate_needed' ? sourceLang : targetLang,
+      targetLang,
+      mode,
+      targetCount,
+    });
+
+    if (audioChanged) {
+      if (audioBlob) {
+        await audioService.saveAudioBlob(id, audioBlob);
+      } else {
+        await audioService.deleteAudioByArticleId(id);
+      }
+    }
+
+    onStartDrill(id);
+  };
+
+  const saveNewDrill = async (finalTarget: string) => {
+    const article = await corpusService.createArticle({
+      title: title.trim() || 'Untitled Drill',
+      sourceText: mode === 'translate_needed' ? sourceText.trim() : '',
+      targetText: finalTarget,
+      sourceLang: mode === 'translate_needed' ? sourceLang : targetLang,
+      targetLang,
+      mode,
+      targetCount,
+    });
+
+    if (audioBlob) {
+      await audioService.saveAudioBlob(article.id, audioBlob);
+    }
+
+    onStartDrill(article.id);
+  };
+
   const handleSaveAndDrill = async () => {
-    const finalTarget = mode === 'direct_foreign' ? targetText.trim() : targetText.trim();
+    const finalTarget = targetText.trim();
     if (!finalTarget) {
       setErrorMessage('Drill text content cannot be empty.');
       return;
     }
 
     try {
-      const article = await corpusService.createArticle({
-        title: title.trim() || 'Untitled Drill',
-        sourceText: mode === 'translate_needed' ? sourceText.trim() : '',
-        targetText: finalTarget,
-        sourceLang: mode === 'translate_needed' ? 'zh-CN' : targetLang,
-        targetLang,
-        mode,
-        targetCount,
-      });
-
-      if (audioBlob) {
-        await audioService.saveAudioBlob(article.id, audioBlob);
+      if (editArticleId) {
+        await saveExistingDrill(editArticleId, finalTarget);
+      } else {
+        await saveNewDrill(finalTarget);
       }
-
-      onStartDrill(article.id);
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Failed to save drill.');
     }
@@ -109,7 +174,9 @@ export const CorpusStudio: React.FC<CorpusStudioProps> = ({ onCancel, onStartDri
           <ArrowLeft className="w-4 h-4" />
           <span>Cancel</span>
         </button>
-        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">Corpus Studio</h2>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
+          {editArticleId ? 'Edit Drill' : 'Corpus Studio'}
+        </h2>
         <div className="w-12" />
       </div>
 
@@ -288,7 +355,7 @@ export const CorpusStudio: React.FC<CorpusStudioProps> = ({ onCancel, onStartDri
               </span>
               <button
                 type="button"
-                onClick={() => setAudioBlob(null)}
+                onClick={handleAudioRemove}
                 className="text-xs text-slate-600 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 underline ml-1"
               >
                 Remove
@@ -306,8 +373,17 @@ export const CorpusStudio: React.FC<CorpusStudioProps> = ({ onCancel, onStartDri
           disabled={!targetText.trim()}
           className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 transition-transform active:scale-95"
         >
-          <Play className="w-4 h-4" />
-          <span>Save and Start Drill</span>
+          {editArticleId ? (
+            <>
+              <Check className="w-4 h-4" />
+              <span>Save Changes</span>
+            </>
+          ) : (
+            <>
+              <Play className="w-4 h-4" />
+              <span>Save and Start Drill</span>
+            </>
+          )}
         </button>
       </div>
     </div>

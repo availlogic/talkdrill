@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, Settings, Trash2, HardDrive, Sparkles } from 'lucide-react';
+import { Plus, Settings, Trash2, HardDrive, Sparkles, Edit3, Archive, ArchiveRestore } from 'lucide-react';
 import { corpusService } from '../services/corpusService';
 import { checkStorageCapacity } from '../utils/storageQuota';
 import { type Article } from '../types/models';
@@ -8,12 +8,14 @@ export interface LibraryOverviewProps {
   onSelectArticle: (id: string) => void;
   onNewArticle: () => void;
   onOpenSettings: () => void;
+  onEditArticle?: (id: string) => void;
 }
 
 export const LibraryOverview: React.FC<LibraryOverviewProps> = ({
   onSelectArticle,
   onNewArticle,
   onOpenSettings,
+  onEditArticle,
 }) => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [showArchived, setShowArchived] = useState(false);
@@ -30,7 +32,7 @@ export const LibraryOverview: React.FC<LibraryOverviewProps> = ({
 
   const loadData = async () => {
     setLoading(true);
-    const list = await corpusService.listArticles(showArchived);
+    const list = await corpusService.listArticles(false, showArchived);
     if (!isMountedRef.current) return;
     setArticles(list);
     const cap = await checkStorageCapacity();
@@ -42,6 +44,12 @@ export const LibraryOverview: React.FC<LibraryOverviewProps> = ({
   useEffect(() => {
     loadData();
   }, [showArchived]);
+
+  const handleToggleArchive = async (e: React.MouseEvent, art: Article) => {
+    e.stopPropagation();
+    await corpusService.updateArticle(art.id, { isArchived: !art.isArchived });
+    loadData();
+  };
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
@@ -168,14 +176,41 @@ export const LibraryOverview: React.FC<LibraryOverviewProps> = ({
                       {art.title}
                     </h3>
                   </div>
-                  <button
-                    type="button"
-                    onClick={(e) => handleDelete(e, art.id)}
-                    aria-label={`Delete ${art.title}`}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 opacity-0 group-hover:opacity-100 transition-all"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all">
+                    {onEditArticle && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEditArticle(art.id);
+                        }}
+                        aria-label={`Edit ${art.title}`}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={(e) => handleToggleArchive(e, art)}
+                      aria-label={art.isArchived ? `Restore ${art.title}` : `Archive ${art.title}`}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors"
+                    >
+                      {art.isArchived ? (
+                        <ArchiveRestore className="w-4 h-4" />
+                      ) : (
+                        <Archive className="w-4 h-4" />
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => handleDelete(e, art.id)}
+                      aria-label={`Delete ${art.title}`}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
                 <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">

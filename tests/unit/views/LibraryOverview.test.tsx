@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { LibraryOverview } from '../../../src/views/LibraryOverview';
 import { db } from '../../../src/storage/db';
 import { corpusService } from '../../../src/services/corpusService';
@@ -90,6 +90,7 @@ describe('LibraryOverview View (TDD)', () => {
     // Switch to archived tab
     const archivedTab = await screen.findByRole('button', { name: 'Archived' });
     fireEvent.click(archivedTab);
+    await waitFor(() => expect(screen.queryByText('Drill to Delete')).toBeNull());
 
     // Switch back to active tab
     const activeTab = screen.getByRole('button', { name: 'Active' });
@@ -99,5 +100,94 @@ describe('LibraryOverview View (TDD)', () => {
     fireEvent.click(deleteBtn);
 
     expect(window.confirm).toHaveBeenCalled();
+  });
+
+  it('correctly filters active vs archived drills', async () => {
+    await corpusService.createArticle({
+      title: 'Active Drill Item',
+      sourceText: '',
+      targetText: 'Activo',
+      sourceLang: 'es-ES',
+      targetLang: 'es-ES',
+      mode: 'direct_foreign',
+    });
+
+    const archivedArt = await corpusService.createArticle({
+      title: 'Archived Drill Item',
+      sourceText: '',
+      targetText: 'Archivado',
+      sourceLang: 'es-ES',
+      targetLang: 'es-ES',
+      mode: 'direct_foreign',
+    });
+    await corpusService.updateArticle(archivedArt.id, { isArchived: true });
+
+    render(<LibraryOverview onSelectArticle={vi.fn()} onNewArticle={vi.fn()} onOpenSettings={vi.fn()} />);
+
+    // Active tab initially
+    expect(await screen.findByText('Active Drill Item')).toBeDefined();
+    expect(screen.queryByText('Archived Drill Item')).toBeNull();
+
+    // Click Archived tab
+    fireEvent.click(screen.getByRole('button', { name: 'Archived' }));
+    expect(await screen.findByText('Archived Drill Item')).toBeDefined();
+    expect(screen.queryByText('Active Drill Item')).toBeNull();
+  });
+
+  it('allows archiving and restoring drills from card actions', async () => {
+    const art = await corpusService.createArticle({
+      title: 'Card To Archive',
+      sourceText: '',
+      targetText: 'Prueba',
+      sourceLang: 'es-ES',
+      targetLang: 'es-ES',
+      mode: 'direct_foreign',
+    });
+
+    render(<LibraryOverview onSelectArticle={vi.fn()} onNewArticle={vi.fn()} onOpenSettings={vi.fn()} />);
+
+    // Find and click archive button on the card
+    const archiveBtn = await screen.findByRole('button', { name: `Archive ${art.title}` });
+    fireEvent.click(archiveBtn);
+
+    // Should no longer be in active list
+    await waitFor(() => expect(screen.queryByText('Card To Archive')).toBeNull());
+
+    // Go to Archived tab
+    fireEvent.click(screen.getByRole('button', { name: 'Archived' }));
+    expect(await screen.findByText('Card To Archive')).toBeDefined();
+
+    // Restore it
+    const restoreBtn = await screen.findByRole('button', { name: `Restore ${art.title}` });
+    fireEvent.click(restoreBtn);
+
+    // Should disappear from archived tab
+    await waitFor(() => expect(screen.queryByText('Card To Archive')).toBeNull());
+  });
+
+  it('triggers onEditArticle when Edit button on card is clicked', async () => {
+    const art = await corpusService.createArticle({
+      title: 'Drill To Edit',
+      sourceText: '',
+      targetText: 'Para editar',
+      sourceLang: 'es-ES',
+      targetLang: 'es-ES',
+      mode: 'direct_foreign',
+    });
+
+    const editSpy = vi.fn();
+    render(
+      <LibraryOverview
+        onSelectArticle={vi.fn()}
+        onNewArticle={vi.fn()}
+        onOpenSettings={vi.fn()}
+        onEditArticle={editSpy}
+      />
+    );
+
+    const editBtn = await screen.findByRole('button', { name: `Edit ${art.title}` });
+    fireEvent.click(editBtn);
+
+    expect(editSpy).toHaveBeenCalledWith(art.id);
   });
 });

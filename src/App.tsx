@@ -61,6 +61,7 @@ export const App: React.FC = () => {
   if (route === 'studio') {
     return (
       <CorpusStudio
+        editArticleId={params.edit}
         onCancel={() => navigateTo('library')}
         onStartDrill={(id) => navigateTo(`drill?id=${id}`)}
       />
@@ -68,7 +69,13 @@ export const App: React.FC = () => {
   }
 
   if (route === 'drill' && params.id) {
-    return <DrillWorkspace articleId={params.id} onBack={() => navigateTo('library')} />;
+    return (
+      <DrillWorkspace
+        articleId={params.id}
+        onBack={() => navigateTo('library')}
+        onEdit={() => navigateTo(`studio?edit=${params.id}`)}
+      />
+    );
   }
 
   if (route === 'settings') {
@@ -80,6 +87,7 @@ export const App: React.FC = () => {
       onSelectArticle={(id) => navigateTo(`drill?id=${id}`)}
       onNewArticle={() => navigateTo('studio')}
       onOpenSettings={() => navigateTo('settings')}
+      onEditArticle={(id) => navigateTo(`studio?edit=${id}`)}
     />
   );
 };

@@ -163,4 +163,61 @@ test.describe('TalkDrill E2E Journeys', () => {
     await page.getByRole('button', { name: 'Back' }).click();
     await expect(page.getByText('No Shadowing Drills Yet')).toBeVisible();
   });
+
+  test('E2E-SCN-005: Edit Drill & Archive/Restore Full Lifecycle', async ({ page }) => {
+    // 1. Create a drill
+    await page.getByRole('button', { name: 'Create First Drill' }).click();
+    await page.getByPlaceholder('Enter drill title (optional)').fill('Lifecycle Drill');
+    await page.getByPlaceholder('Enter or paste foreign text here...').fill('Original target sentence.');
+    await page.getByRole('button', { name: 'Save and Start Drill' }).click();
+
+    await expect(page.getByText('Lifecycle Drill')).toBeVisible();
+
+    // 2. Perform 3 repetitions
+    const drillBtn = page.getByRole('button', { name: 'Drill +1' });
+    await drillBtn.click();
+    await drillBtn.click();
+    await drillBtn.click();
+    await expect(page.getByRole('button', { name: 'Adjust Repetition Count' })).toContainText('3 reps');
+
+    // 3. Click Edit from Drill Workspace
+    await page.getByRole('button', { name: 'Edit Drill' }).click();
+    await expect(page.getByText('Edit Drill')).toBeVisible();
+
+    // 4. Modify drill content
+    const titleInput = page.getByPlaceholder('Enter drill title (optional)');
+    await titleInput.fill('Updated Lifecycle Drill');
+    const textInput = page.getByPlaceholder('Enter or paste foreign text here...');
+    await textInput.fill('Updated target sentence with refinement.');
+
+    // 5. Save Changes
+    await page.getByRole('button', { name: 'Save Changes' }).click();
+
+    // 6. Verify DrillWorkspace updated while preserving count
+    await expect(page.getByText('Updated Lifecycle Drill')).toBeVisible();
+    await expect(page.getByText('Updated target sentence with refinement.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Adjust Repetition Count' })).toContainText('3 reps');
+
+    // 7. Return to Library
+    await page.getByRole('button', { name: 'Back to Library' }).click();
+    await expect(page.getByText('Updated Lifecycle Drill')).toBeVisible();
+    await expect(page.getByText('3 / 500 reps')).toBeVisible();
+
+    // 8. Archive the drill from card
+    await page.getByRole('button', { name: 'Archive Updated Lifecycle Drill' }).click();
+    await expect(page.getByText('Updated Lifecycle Drill')).not.toBeVisible();
+
+    // 9. Switch to Archived tab
+    await page.getByRole('button', { name: 'Archived' }).click();
+    await expect(page.getByText('Updated Lifecycle Drill')).toBeVisible();
+
+    // 10. Restore the drill from card
+    await page.getByRole('button', { name: 'Restore Updated Lifecycle Drill' }).click();
+    await expect(page.getByText('Updated Lifecycle Drill')).not.toBeVisible();
+
+    // 11. Switch back to Active tab and verify drill restored with count intact
+    await page.getByRole('button', { name: 'Active' }).click();
+    await expect(page.getByText('Updated Lifecycle Drill')).toBeVisible();
+    await expect(page.getByText('3 / 500 reps')).toBeVisible();
+  });
 });

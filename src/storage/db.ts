@@ -14,10 +14,10 @@ export interface ArticleRecord {
   mode: LanguageMode;
   targetCount: number;
   currentCount: number;
-  audioId?: string;
+  audioId?: string | undefined;
   createdAt: number;
   updatedAt: number;
-  lastPracticedAt?: number;
+  lastPracticedAt?: number | undefined;
   isArchived: number; // 0: active, 1: archived (indexed)
 }
 

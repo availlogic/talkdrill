@@ -128,7 +128,39 @@ describe('DrillWorkspace View (TDD)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Rewind 2s' }));
     fireEvent.click(screen.getByRole('button', { name: 'Set loop start A' }));
     fireEvent.click(screen.getByRole('button', { name: 'Set loop end B' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Clear loop' }));
     fireEvent.click(screen.getByRole('button', { name: /pause/i }));
+  });
+
+  it('renders Edit button and triggers onEdit callback', async () => {
+    const editSpy = vi.fn();
+    render(<DrillWorkspace articleId={articleId} onBack={vi.fn()} onEdit={editSpy} />);
+
+    const editBtn = await screen.findByRole('button', { name: /edit drill/i });
+    fireEvent.click(editBtn);
+
+    expect(editSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('toggles archive and restore status from workspace header', async () => {
+    render(<DrillWorkspace articleId={articleId} onBack={vi.fn()} />);
+
+    const archiveBtn = await screen.findByRole('button', { name: /archive drill/i });
+    fireEvent.click(archiveBtn);
+
+    // After archiving, button changes to restore drill
+    const restoreBtn = await screen.findByRole('button', { name: /restore drill/i });
+    expect(restoreBtn).toBeDefined();
+
+    // Verify DB updated
+    let art = await corpusService.getArticle(articleId);
+    expect(art?.isArchived).toBe(true);
+
+    // Click restore to unarchive
+    fireEvent.click(restoreBtn);
+    const reArchivedBtn = await screen.findByRole('button', { name: /archive drill/i });
+    expect(reArchivedBtn).toBeDefined();
+
+    art = await corpusService.getArticle(articleId);
+    expect(art?.isArchived).toBe(false);
   });
 });

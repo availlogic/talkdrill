@@ -73,6 +73,10 @@ describe('CorpusService (TDD)', () => {
 
     const allList = await corpusService.listArticles(true);
     expect(allList.length).toBe(2);
+
+    const archivedOnlyList = await corpusService.listArticles(false, true);
+    expect(archivedOnlyList.length).toBe(1);
+    expect(archivedOnlyList[0]?.id).toBe(art2.id);
   });
 
   it('updates article fields properly and throws for missing article', async () => {
@@ -87,13 +91,20 @@ describe('CorpusService (TDD)', () => {
 
     const updated = await corpusService.updateArticle(art.id, {
       title: 'New Title',
-      targetText: '¡Hola!',
+      sourceText: 'Hello world',
+      targetText: '¡Hola mundo!',
+      sourceLang: 'en-US',
+      targetLang: 'es-ES',
+      mode: 'translate_needed',
       targetCount: 300,
       isArchived: false,
     });
 
     expect(updated.title).toBe('New Title');
-    expect(updated.targetText).toBe('¡Hola!');
+    expect(updated.sourceText).toBe('Hello world');
+    expect(updated.targetText).toBe('¡Hola mundo!');
+    expect(updated.sourceLang).toBe('en-US');
+    expect(updated.mode).toBe('translate_needed');
     expect(updated.targetCount).toBe(300);
     expect(updated.isArchived).toBe(false);
 

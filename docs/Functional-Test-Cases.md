@@ -53,15 +53,29 @@
 - **Expected Result**: 步骤 1 呈现极简空状态插画与“新建第一篇”按钮；步骤 3 呈现 1 张篇目卡片，显示标题、语种标签 `es-ES`、进度 `0 / 500` 与创建时间。
 - **Priority**: Medium
 
-### TC-FT-CORP-006: 篇目归档与危险删除级联
+### TC-FT-CORP-006: 篇目归档与恢复切换 (Archive & Restore) 及级联删除
 - **Feature Name**: 语料录入与管理
 - **Preconditions**: 篇目库中存在 1 篇已绑定音频且已有 120 次打卡记录的篇目。
 - **Steps**:
-  1. 点击卡片右上角“...”菜单，选择“归档”。
-  2. 切换查看“已归档”列表，再次点击选择“删除”。
-  3. 在弹出的二次危险确认框中点击“确认删除”。
-- **Expected Result**: 归档后主列表不再展示该篇目；确认删除后，篇目从 IndexedDB 移除，且对应 `audios` 表中的音频 Blob 与 `drillLogs` 表中的流水记录同步被原子清理。
+  1. 在 Active 列表点击卡片操作组中的归档按钮（Archive）。
+  2. 观察 Active 列表，该篇目被即时移出。
+  3. 切换至 "Archived" 标签页，验证该篇目仅在已归档列表显示。
+  4. 点击卡片上的恢复按钮（Restore）。
+  5. 切换回 "Active" 标签页，篇目重新显现。
+  6. 点击删除按钮并在弹出的二次确认框中确认。
+- **Expected Result**: 归档后篇目仅在 Archived 标签页呈现；恢复后重新归入 Active；确认删除后，篇目及关联的音频 Blob 与打卡历史在 IndexedDB 中同步被彻底清除。
 - **Priority**: High
+
+### TC-FT-CORP-007: 篇目二次编辑 (Edit Drill) 保持打卡历史
+- **Feature Name**: 语料录入与管理
+- **Preconditions**: 篇目库中存在 1 篇已有 142 次打卡记录的篇目。
+- **Steps**:
+  1. 在篇目卡片点击编辑按钮（或在 DrillWorkspace 顶部点击 "Edit"）。
+  2. 进入 Corpus Studio 编辑模式，验证标题显示 "Edit Drill"，表单自动加载原有标题、原文、译文与音频。
+  3. 修改原文草稿并重新点击翻译，或直接微调译文文本，并替换或移除音频。
+  4. 点击 "Save Changes"。
+- **Expected Result**: 篇目属性与音频成功更新，同时已有打卡次数（142 次）与打卡日志记录完全保留，不被重置清空。
+- **Priority**: Critical
 
 ---
 

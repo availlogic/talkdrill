@@ -34,12 +34,15 @@ graph TD
 
     Screen1 -->|点击新建篇目| Screen2
     Screen1 -->|点击已有篇目卡片| Screen3
+    Screen1 -->|点击卡片编辑按钮| Screen2
+    Screen1 -->|点击卡片归档或恢复| Screen1
     
     Screen2 -->|完成录入/翻译/音频并保存| Screen3
-    Screen2 -->|取消新建| Screen1
+    Screen2 -->|取消新建或编辑| Screen1
     
-    Screen3 -->|切换篇目列表抽屉| Screen1
+    Screen3 -->|返回篇目库| Screen1
     Screen3 -->|点击编辑当前篇目| Screen2
+    Screen3 -->|切换归档或恢复| Screen3
     Screen3 -->|点击打印或导出| Screen4
     Screen3 -->|点击设置图标| Screen5
     
@@ -243,8 +246,8 @@ flowchart TD
 
 ### 4.2 路由与状态恢复 (URL Hash Navigation)
 - `#/`：主工作台（默认加载最后一次活跃篇目；若库为空则展示快速创建引导）。
-- `#/library`：篇目库概览列表。
+- `#/library`：篇目库概览列表（支持 Active 与 Archived 独立视图切换，卡片提供 Edit、Archive/Restore 与 Delete 按钮）。
 - `#/studio`：新建篇目工作室。
-- `#/studio/:articleId`：编辑已有篇目工作室。
-- `#/drill/:articleId`：指定篇目的跟读强化工作台。
+- `#/studio?edit=:articleId`：编辑已有篇目工作室（预填内容与音频，保存保留累积打卡遍数）。
+- `#/drill?id=:articleId`：指定篇目的跟读强化工作台（顶部提供 Edit 与 Archive/Restore 入口）。
 - `#/settings`：打开设置模态。

@@ -20,9 +20,9 @@ TalkDrill 专为高频肌肉记忆特训而生：
 
 ```
 [UI Views]
-  ├── LibraryOverview (语料库与容量看板)
-  ├── CorpusStudio (直接录入 / AI 口语翻译 / 自有与第三方生成音频导入)
-  ├── DrillWorkspace (跟读特训空间 / 正字矩阵 / 触控大胶囊 / 极简专注模式)
+  ├── LibraryOverview (语料库与容量看板 / Active 与 Archived 独立视图 / 归档与编辑入口)
+  ├── CorpusStudio (直接录入 / AI 口语翻译 / 篇目与音频可编辑 / 自有与第三方生成音频导入)
+  ├── DrillWorkspace (跟读特训空间 / 正字矩阵 / 触控大胶囊 / 极简专注模式 / 直接编辑与归档)
   ├── PrintExportModal (60/100 格纸质打卡表与 Markdown 导出)
   └── SettingsHub (Anthropic BYOK 凭据与同源代理 / 主题模式 / 危险区原子清除)
          │
@@ -181,3 +181,13 @@ npx wrangler pages deploy dist --project-name talkdrill
 1. 底部常驻高度大于 58px 的触控大胶囊按钮（"Drill +1" 与 "Undo last count"）。
 2. 拇指轻触右侧大按钮完成 +1 打卡，轻触左侧小按钮完成 -1 撤销。
 3. 点击顶部计数标签（"Adjust Repetition Count"）可弹出数字微调弹窗，直接手动校准打卡数值。
+
+### 语料编辑与归档操作流程
+1. **编辑已有语料 (Edit Drill)**：
+   - 在篇目卡片点击编辑按钮（铅笔图标）或在 DrillWorkspace 顶部点击 "Edit"，即可调出编辑模式。
+   - 用户可随时修改源语言草稿、重新发起 AI 口语翻译、直接微调外语目标正文、或者替换/移除参考音频。
+   - 保存时保留原有的打卡历史（`currentCount` 与 `drillLogs`），避免由于细微拼写或表述调整而从零重新建立篇目。
+2. **归档与还原 (Archive & Restore)**：
+   - 在篇目卡片或 DrillWorkspace 顶部点击 "Archive" 按钮，可将已完成或暂停练习的篇目移至 "Archived" 标签页。
+   - "Archived" 标签页仅展示已归档篇目；点击卡片或工作台上的 "Restore" 按钮，可随时一键将篇目移回 "Active" 继续练习。
+   - 点击卡片上的删除按钮（垃圾桶图标）执行永久硬删除，并级联清除所有绑定的音频与打卡历史。

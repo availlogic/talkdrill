@@ -31,6 +31,7 @@ export interface IAudioService {
   uploadLocalAudio(request: UploadAudioRequest): Promise<AudioItem>;
   getAudioByArticleId(articleId: string): Promise<AudioItem | null>;
   deleteAudio(id: string): Promise<void>;
+  deleteAudioByArticleId(articleId: string): Promise<void>;
   exportAudioFile(audioItem: AudioItem): void;
 }
 
@@ -94,6 +95,7 @@ export class AudioService implements IAudioService {
     blob: Blob | File,
     sourceType: 'tts' | 'upload' = 'upload'
   ): Promise<AudioItem> {
+    await db.audios.where('articleId').equals(articleId).delete();
     const id = crypto.randomUUID();
     const now = Date.now();
     const fileName = blob instanceof File ? blob.name : `drill-${articleId}.mp3`;
@@ -202,6 +204,14 @@ export class AudioService implements IAudioService {
 
   async deleteAudio(id: string): Promise<void> {
     await db.audios.delete(id);
+  }
+
+  async deleteAudioByArticleId(articleId: string): Promise<void> {
+    await db.audios.where('articleId').equals(articleId).delete();
+    const existing = await db.articles.get(articleId);
+    if (existing) {
+      await db.articles.update(articleId, { audioId: undefined, updatedAt: Date.now() });
+    }
   }
 
   exportAudioFile(audioItem: AudioItem): void {

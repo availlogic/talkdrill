@@ -128,4 +128,110 @@ describe('CorpusStudio View (TDD)', () => {
       expect(screen.getByText(/Audio Ready/i)).toBeDefined();
     });
   });
+
+  it('loads existing drill in edit mode and saves updates without losing repetition count', async () => {
+    await db.articles.add({
+      id: 'art-edit-existing',
+      title: 'Original Title',
+      sourceText: 'Hello original',
+      targetText: 'Hola original',
+      sourceLang: 'en-US',
+      targetLang: 'es-ES',
+      mode: 'translate_needed',
+      targetCount: 500,
+      currentCount: 142,
+      createdAt: 1000,
+      updatedAt: 1000,
+      isArchived: 0,
+    });
+
+    const drillSpy = vi.fn();
+    render(<CorpusStudio editArticleId="art-edit-existing" onCancel={vi.fn()} onStartDrill={drillSpy} />);
+
+    // Check header and button
+    expect(await screen.findByText('Edit Drill')).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Save Changes' })).toBeDefined();
+
+    // Verify existing fields pre-filled once async data is loaded
+    await waitFor(() => {
+      const titleInput = screen.getByPlaceholderText('Enter drill title (optional)') as HTMLInputElement;
+      expect(titleInput.value).toBe('Original Title');
+    });
+
+    const titleInput = screen.getByPlaceholderText('Enter drill title (optional)') as HTMLInputElement;
+    const sourceArea = screen.getByPlaceholderText('Enter original text or expression draft to translate into idiomatic spoken target text...') as HTMLTextAreaElement;
+    expect(sourceArea.value).toBe('Hello original');
+
+    const targetArea = screen.getByPlaceholderText('Translated spoken target text will appear here...') as HTMLTextAreaElement;
+    expect(targetArea.value).toBe('Hola original');
+
+    // Modify fields
+    fireEvent.change(titleInput, { target: { value: 'Updated Title' } });
+    fireEvent.change(sourceArea, { target: { value: 'Hello modified' } });
+    fireEvent.change(targetArea, { target: { value: 'Hola modificado' } });
+
+    // Click Save Changes
+    const saveBtn = screen.getByRole('button', { name: 'Save Changes' });
+    fireEvent.click(saveBtn);
+
+    await waitFor(async () => {
+      expect(drillSpy).toHaveBeenCalledWith('art-edit-existing');
+      const updatedInDb = await db.articles.get('art-edit-existing');
+      expect(updatedInDb?.title).toBe('Updated Title');
+      expect(updatedInDb?.sourceText).toBe('Hello modified');
+      expect(updatedInDb?.targetText).toBe('Hola modificado');
+      // Crucial: currentCount must NOT be reset
+      expect(updatedInDb?.currentCount).toBe(142);
+    });
+  });
+
+  it('loads existing audio in edit mode and allows removing audio', async () => {
+    const artId = 'art-with-audio';
+    await db.articles.add({
+      id: artId,
+      title: 'Audio Edit Test',
+      sourceText: '',
+      targetText: 'Texto con audio',
+      sourceLang: 'es-ES',
+      targetLang: 'es-ES',
+      mode: 'direct_foreign',
+      targetCount: 300,
+      currentCount: 50,
+      createdAt: 1000,
+      updatedAt: 1000,
+      isArchived: 0,
+    });
+
+    await db.audios.add({
+      id: 'existing-audio-id',
+      articleId: artId,
+      blob: new Blob(['audio-data'], { type: 'audio/mpeg' }),
+      mimeType: 'audio/mpeg',
+      fileName: 'existing.mp3',
+      fileSize: 10,
+      duration: 5,
+      sourceType: 'upload',
+      createdAt: 1000,
+    });
+
+    const drillSpy = vi.fn();
+    render(<CorpusStudio editArticleId={artId} onCancel={vi.fn()} onStartDrill={drillSpy} />);
+
+    // Verify audio ready is shown
+    expect(await screen.findByText(/Audio Ready/i)).toBeDefined();
+
+    // Click Remove audio
+    const removeBtn = screen.getByRole('button', { name: 'Remove' });
+    fireEvent.click(removeBtn);
+    expect(screen.queryByText(/Audio Ready/i)).toBeNull();
+
+    // Save changes
+    fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
+
+    await waitFor(async () => {
+      expect(drillSpy).toHaveBeenCalledWith(artId);
+      const remainingAudios = await db.audios.where('articleId').equals(artId).toArray();
+      expect(remainingAudios.length).toBe(0);
+    });
+  });
 });

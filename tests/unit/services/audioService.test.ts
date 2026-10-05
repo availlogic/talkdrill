@@ -199,5 +199,48 @@ describe('AudioService (TDD)', () => {
     const inDb = await db.audios.get(item.id);
     expect(inDb).toBeDefined();
   });
+
+  it('replaces existing audio record when saveAudioBlob is called again', async () => {
+    const blob1 = new Blob(['data-1'], { type: 'audio/mpeg' });
+    const item1 = await service.saveAudioBlob('art-replace', blob1, 'upload');
+
+    const blob2 = new Blob(['data-2'], { type: 'audio/mpeg' });
+    const item2 = await service.saveAudioBlob('art-replace', blob2, 'upload');
+
+    expect(item2.id).not.toBe(item1.id);
+    const oldInDb = await db.audios.get(item1.id);
+    expect(oldInDb).toBeUndefined();
+
+    const currentAudios = await db.audios.where('articleId').equals('art-replace').toArray();
+    expect(currentAudios.length).toBe(1);
+    expect(currentAudios[0]?.id).toBe(item2.id);
+  });
+
+  it('deletes audio by article ID and updates article audioId', async () => {
+    await db.articles.add({
+      id: 'art-del-audio',
+      title: 'T',
+      sourceText: '',
+      targetText: 'X',
+      sourceLang: 'en',
+      targetLang: 'es-ES',
+      mode: 'direct_foreign',
+      targetCount: 500,
+      currentCount: 0,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      isArchived: 0,
+    });
+
+    const blob = new Blob(['data'], { type: 'audio/mpeg' });
+    await service.saveAudioBlob('art-del-audio', blob, 'upload');
+
+    await service.deleteAudioByArticleId('art-del-audio');
+    const audios = await db.audios.where('articleId').equals('art-del-audio').toArray();
+    expect(audios.length).toBe(0);
+
+    const art = await db.articles.get('art-del-audio');
+    expect(art?.audioId).toBeUndefined();
+  });
 });
 

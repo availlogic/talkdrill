@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { ArrowLeft, Printer, Eye, EyeOff, Award, SlidersHorizontal } from 'lucide-react';
+import { ArrowLeft, Printer, Eye, EyeOff, Award, SlidersHorizontal, Edit3, Archive, ArchiveRestore } from 'lucide-react';
 import { corpusService } from '../services/corpusService';
 import { drillCounterService } from '../services/drillCounterService';
 import { audioService } from '../services/audioService';
@@ -14,9 +14,10 @@ import { type Article, type MilestoneResult } from '../types/models';
 export interface DrillWorkspaceProps {
   articleId: string;
   onBack: () => void;
+  onEdit?: () => void;
 }
 
-export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBack }) => {
+export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBack, onEdit }) => {
   const [article, setArticle] = useState<Article | null>(null);
   const [currentCount, setCurrentCount] = useState(0);
   const [isZenMode, setIsZenMode] = useState(false);
@@ -128,6 +129,13 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
     setIsOverrideModalOpen(false);
   };
 
+  const handleToggleArchive = async () => {
+    if (!article) return;
+    const nextArchived = !article.isArchived;
+    const updated = await corpusService.updateArticle(articleId, { isArchived: nextArchived });
+    setArticle(updated);
+  };
+
   return (
     <div className={`min-h-screen flex flex-col ${isZenMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50/50 dark:bg-slate-950'}`}>
       {/* Top Header */}
@@ -151,6 +159,37 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
           </div>
 
           <div className="flex items-center gap-2">
+            {onEdit && (
+              <button
+                type="button"
+                onClick={onEdit}
+                aria-label="Edit Drill"
+                className="px-3 py-1.5 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1.5 text-slate-700 dark:text-slate-300"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Edit</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={handleToggleArchive}
+              aria-label={article.isArchived ? 'Restore Drill' : 'Archive Drill'}
+              className="px-3 py-1.5 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1.5 text-slate-700 dark:text-slate-300"
+            >
+              {article.isArchived ? (
+                <>
+                  <ArchiveRestore className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Restore</span>
+                </>
+              ) : (
+                <>
+                  <Archive className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Archive</span>
+                </>
+              )}
+            </button>
+
             <button
               type="button"
               onClick={() => setIsZenMode(true)}

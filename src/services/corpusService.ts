@@ -13,7 +13,11 @@ export interface CreateArticleInput {
 
 export interface UpdateArticleInput {
   title?: string;
+  sourceText?: string;
   targetText?: string;
+  sourceLang?: string;
+  targetLang?: string;
+  mode?: LanguageMode;
   targetCount?: number;
   isArchived?: boolean;
 }
@@ -21,7 +25,7 @@ export interface UpdateArticleInput {
 export interface ICorpusService {
   createArticle(input: CreateArticleInput): Promise<Article>;
   getArticle(id: string): Promise<Article | null>;
-  listArticles(includeArchived?: boolean): Promise<Article[]>;
+  listArticles(includeArchived?: boolean, archivedOnly?: boolean): Promise<Article[]>;
   updateArticle(id: string, input: UpdateArticleInput): Promise<Article>;
   deleteArticle(id: string): Promise<void>;
   parseTextFile(file: File): Promise<string>;
@@ -76,10 +80,15 @@ export class CorpusService implements ICorpusService {
     return record ? mapRecordToArticle(record) : null;
   }
 
-  async listArticles(includeArchived = false): Promise<Article[]> {
-    const collection = includeArchived
-      ? db.articles.toCollection()
-      : db.articles.where('isArchived').equals(0);
+  async listArticles(includeArchived = false, archivedOnly = false): Promise<Article[]> {
+    let collection;
+    if (archivedOnly) {
+      collection = db.articles.where('isArchived').equals(1);
+    } else if (includeArchived) {
+      collection = db.articles.toCollection();
+    } else {
+      collection = db.articles.where('isArchived').equals(0);
+    }
 
     const records = await collection.toArray();
     records.sort((a, b) => {
@@ -102,7 +111,11 @@ export class CorpusService implements ICorpusService {
     };
 
     if (input.title !== undefined) updates.title = input.title.trim();
+    if (input.sourceText !== undefined) updates.sourceText = input.sourceText;
     if (input.targetText !== undefined) updates.targetText = input.targetText;
+    if (input.sourceLang !== undefined) updates.sourceLang = input.sourceLang;
+    if (input.targetLang !== undefined) updates.targetLang = input.targetLang;
+    if (input.mode !== undefined) updates.mode = input.mode;
     if (input.targetCount !== undefined) updates.targetCount = input.targetCount;
     if (input.isArchived !== undefined) updates.isArchived = input.isArchived ? 1 : 0;
 
