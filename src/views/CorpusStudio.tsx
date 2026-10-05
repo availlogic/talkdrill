@@ -276,7 +276,7 @@ export const CorpusStudio: React.FC<CorpusStudioProps> = ({ onCancel, onStartDri
               value={sourceText}
               onChange={(e) => setSourceText(e.target.value)}
               placeholder="Enter original text or expression draft to translate into idiomatic spoken target text..."
-              className="w-full text-sm p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 resize-none"
+              className="w-full text-sm p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 resize-y min-h-[110px]"
             />
             <div className="flex justify-end pt-1">
               <button
@@ -300,7 +300,7 @@ export const CorpusStudio: React.FC<CorpusStudioProps> = ({ onCancel, onStartDri
               value={targetText}
               onChange={(e) => setTargetText(e.target.value)}
               placeholder="Translated spoken target text will appear here..."
-              className="w-full text-sm p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 resize-none font-medium"
+              className="w-full text-sm p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 resize-y min-h-[110px] font-medium"
             />
           </div>
         </div>
@@ -321,7 +321,7 @@ export const CorpusStudio: React.FC<CorpusStudioProps> = ({ onCancel, onStartDri
             value={targetText}
             onChange={(e) => setTargetText(e.target.value)}
             placeholder="Enter or paste foreign text here..."
-            className="w-full text-sm p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 resize-none font-medium"
+            className="w-full text-sm p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 resize-y min-h-[110px] font-medium"
           />
         </div>
       )}

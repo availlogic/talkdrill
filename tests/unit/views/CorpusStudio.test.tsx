@@ -28,7 +28,10 @@ describe('CorpusStudio View (TDD)', () => {
     fireEvent.click(directBtn);
     expect(directBtn.getAttribute('aria-pressed')).toBe('true');
     expect(aiBtn.getAttribute('aria-pressed')).toBe('false');
-    expect(screen.getByPlaceholderText('Enter or paste foreign text here...')).toBeDefined();
+    const directArea = screen.getByPlaceholderText('Enter or paste foreign text here...');
+    expect(directArea).toBeDefined();
+    expect(directArea.className).toContain('resize-y');
+    expect(directArea.className).not.toContain('resize-none');
   });
 
   it('allows text input and title customization', () => {
@@ -39,10 +42,14 @@ describe('CorpusStudio View (TDD)', () => {
     expect((titleInput as HTMLInputElement).value).toBe('Pedido en Restaurante');
 
     const sourceArea = screen.getByPlaceholderText('Enter original text or expression draft to translate into idiomatic spoken target text...');
+    expect(sourceArea.className).toContain('resize-y');
+    expect(sourceArea.className).not.toContain('resize-none');
     fireEvent.change(sourceArea, { target: { value: 'Una mesa para dos, por favor.' } });
     expect((sourceArea as HTMLTextAreaElement).value).toBe('Una mesa para dos, por favor.');
 
     const targetArea = screen.getByPlaceholderText('Translated spoken target text will appear here...');
+    expect(targetArea.className).toContain('resize-y');
+    expect(targetArea.className).not.toContain('resize-none');
     fireEvent.change(targetArea, { target: { value: 'A table for two, please.' } });
     expect((targetArea as HTMLTextAreaElement).value).toBe('A table for two, please.');
   });

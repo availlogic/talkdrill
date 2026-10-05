@@ -103,6 +103,7 @@ TalkDrill 是一款服务于极度专注、追求生理肌肉定型的高强度�
   - 边框：`border border-slate-300 dark:border-slate-700 rounded-xl`。
   - 焦点：`focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none`。
   - 字体：`text-base leading-relaxed p-4`。
+  - 尺寸与缩放：支持垂直方向拖拽调节高度（`resize-y`，带有浏览器原生右下角拖拽手柄图标），设置最小高度 `min-h-[110px]` 避免过分折叠，防止横向拉伸破坏响应式栅格。
 
 ### 5.3 音频播放器组件 (Audio Player Bar)
 - **Waveform / Slider**：高度 `6px`，拖拽滑块（Thumb）直径 `16px`。
