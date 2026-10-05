@@ -35,6 +35,7 @@ TalkDrill 专为高频肌肉记忆特训而生：
   └── printExportService (纯函数 60/100 格打卡表与 Markdown 渲染)
          │
 [Core Utils & Storage]
+  ├── textAlignment (纯函数双语段落与单行对话智能对齐匹配)
   ├── zhengMath (纯函数正字笔画计算与阶段里程碑判定：50/150/300/500 遍)
   ├── audioContextManager (用户手势即时解锁浏览器 AudioContext)
   ├── storageQuota (StorageManager API 存储配额与持久化检查)
@@ -178,7 +179,7 @@ npx wrangler pages deploy dist --project-name talkdrill
 3. 每满 5 划自动结成 1 个完整“正”字。
 4. 如需回退误触，按下键盘 `Z` 键或点击 "Undo last count" 执行撤销（-1）。
 5. 按下键盘 `P` 键即可将参考音频快退至当前 A-B 复读起点重新朗读（系统自动忽略带 Cmd/Ctrl/Alt 的浏览器组合键，避免拦截原生刷新）。若篇目附带音频，在常规非 Focus 模式下播放控制栏置于语料文本框与正字打卡板之间，方便对照朗读并查看波形；设定 A 点后进度条显示高亮指示点与参考时间戳，在拖拽寻找 B 点或连续播放过程中持续驻留，并支持点击 'X' 随时撤销；在 Focus 模式下置于底部大胶囊上方。
-6. 点击 "Focus Mode" 可开启全黑沉浸专注模式；点击 "Print Sheet" 调出 60/100 格纸质打卡表与 Markdown 导出。
+6. 点击 "Focus Mode" 可开启全黑沉浸专注模式（仅显示纯外语）；在非 Focus 模式下，包含英文源文的篇目将自动采用段落交替对照方式排版（每段外语文本下紧跟对应英文原文），长文章与多轮对话段落语义一目了然。点击 "Print Sheet" 调出 60/100 格纸质打卡表与 Markdown 导出。
 
 ### 移动端单手操作流程
 1. 底部常驻高度大于 58px 的触控大胶囊按钮（"Drill +1" 与 "Undo last count"）。

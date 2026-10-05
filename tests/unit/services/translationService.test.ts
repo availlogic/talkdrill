@@ -11,12 +11,15 @@ describe('TranslationService (TDD)', () => {
   it('builds spoken prompt for Castilian Spanish and Japanese by default', () => {
     const promptEs = service.buildSpokenPrompt('es-ES');
     expect(promptEs).toContain('Castilian Spanish');
+    expect(promptEs).toContain('Preserve the exact line break and paragraph structure');
 
     const promptJa = service.buildSpokenPrompt('ja-JP');
     expect(promptJa).toContain('Japanese');
+    expect(promptJa).toContain('Preserve the exact line break and paragraph structure');
 
     const promptOther = service.buildSpokenPrompt('fr-FR');
     expect(promptOther).toContain('expert native translator');
+    expect(promptOther).toContain('Preserve the exact line break and paragraph structure');
   });
 
   it('allows custom prompt override', () => {

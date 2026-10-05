@@ -34,7 +34,7 @@ describe('DrillWorkspace View (TDD)', () => {
     expect(screen.getByRole('button', { name: /drill \+1/i })).toBeDefined();
   });
 
-  it('renders targetText and sourceText preserving multiline whitespace and breaks with whitespace-pre-wrap', async () => {
+  it('renders targetText and sourceText in interleaved bilingual paragraphs with whitespace-pre-wrap', async () => {
     const multilineArt = await corpusService.createArticle({
       title: 'Dialogue Drill',
       sourceText: 'Excuse me!\n\nYes?\n\nIs this your handbag?',
@@ -47,15 +47,65 @@ describe('DrillWorkspace View (TDD)', () => {
 
     render(<DrillWorkspace articleId={multilineArt.id} onBack={vi.fn()} />);
 
-    const targetEl = await screen.findByText(/¡Perdona!/);
-    expect(targetEl.className).toContain('whitespace-pre-wrap');
-    expect(targetEl.className).toContain('break-words');
-    expect(targetEl.textContent).toContain('¡Perdona!\n\n¿Sí?\n\n¿Es tu bolso este?');
+    const targetEl1 = await screen.findByText('¡Perdona!');
+    expect(targetEl1.className).toContain('whitespace-pre-wrap');
+    expect(targetEl1.className).toContain('break-words');
 
-    const sourceEl = screen.getByText(/Excuse me!/);
-    expect(sourceEl.className).toContain('whitespace-pre-wrap');
-    expect(sourceEl.className).toContain('break-words');
-    expect(sourceEl.textContent).toContain('Excuse me!\n\nYes?\n\nIs this your handbag?');
+    const sourceEl1 = screen.getByText('Excuse me!');
+    expect(sourceEl1.className).toContain('whitespace-pre-wrap');
+    expect(sourceEl1.className).toContain('break-words');
+
+    const targetEl2 = screen.getByText('¿Sí?');
+    const sourceEl2 = screen.getByText('Yes?');
+    expect(targetEl2).toBeDefined();
+    expect(sourceEl2).toBeDefined();
+
+    const targetEl3 = screen.getByText('¿Es tu bolso este?');
+    const sourceEl3 = screen.getByText('Is this your handbag?');
+    expect(targetEl3).toBeDefined();
+    expect(sourceEl3).toBeDefined();
+  });
+
+  it('hides sourceText completely and displays targetText when Zen mode is activated on bilingual drill', async () => {
+    const multilineArt = await corpusService.createArticle({
+      title: 'Dialogue Drill 2',
+      sourceText: 'Excuse me!\n\nYes?',
+      targetText: '¡Perdona!\n\n¿Sí?',
+      sourceLang: 'en-US',
+      targetLang: 'es-ES',
+      mode: 'translate_needed',
+      targetCount: 500,
+    });
+
+    render(<DrillWorkspace articleId={multilineArt.id} onBack={vi.fn()} />);
+    await screen.findByText('¡Perdona!');
+    expect(screen.getByText('Excuse me!')).toBeDefined();
+
+    // Toggle Focus Mode (Zen Mode)
+    fireEvent.click(screen.getByRole('button', { name: /focus mode/i }));
+
+    // Source text should now be hidden
+    expect(screen.queryByText('Excuse me!')).toBeNull();
+    expect(screen.queryByText('Yes?')).toBeNull();
+    // Target text should be displayed
+    const targetEl = screen.getByText(/¡Perdona!/);
+    expect(targetEl.textContent).toContain('¡Perdona!\n\n¿Sí?');
+  });
+
+  it('displays only targetText without sourceText for direct_foreign articles with empty source', async () => {
+    const directArt = await corpusService.createArticle({
+      title: 'Direct Foreign Drill',
+      sourceText: '',
+      targetText: 'Solo en español',
+      sourceLang: 'es-ES',
+      targetLang: 'es-ES',
+      mode: 'direct_foreign',
+      targetCount: 300,
+    });
+
+    render(<DrillWorkspace articleId={directArt.id} onBack={vi.fn()} />);
+    expect(await screen.findByText('Solo en español')).toBeDefined();
+    expect(screen.queryByText('### Source Reference')).toBeNull();
   });
 
   it('increments count on primary capsule button click', async () => {

@@ -24,8 +24,8 @@ export interface ITranslationService {
 }
 
 const DEFAULT_PROMPTS: Record<string, string> = {
-  'es-ES': 'You are an expert native linguist specializing in Castilian Spanish spoken fluency. Translate the following text into natural, idiomatic European Spanish as spoken in daily life in Spain. Do not use textbook phrasing. Output ONLY the translated foreign spoken text.',
-  'ja-JP': 'You are an expert native linguist specializing in natural conversational Japanese. Translate the following text into natural, idiomatic spoken Japanese. Output ONLY the translated foreign spoken text.',
+  'es-ES': 'You are an expert native linguist specializing in Castilian Spanish spoken fluency. Translate the following text into natural, idiomatic European Spanish as spoken in daily life in Spain. Preserve the exact line break and paragraph structure of the source text. Do not use textbook phrasing. Output ONLY the translated foreign spoken text.',
+  'ja-JP': 'You are an expert native linguist specializing in natural conversational Japanese. Translate the following text into natural, idiomatic spoken Japanese. Preserve the exact line break and paragraph structure of the source text. Output ONLY the translated foreign spoken text.',
 };
 
 export class TranslationService implements ITranslationService {
@@ -33,7 +33,7 @@ export class TranslationService implements ITranslationService {
     if (customPrompt && customPrompt.trim().length > 0) {
       return customPrompt.trim();
     }
-    return DEFAULT_PROMPTS[targetLang] || 'You are an expert native translator. Translate the text into natural daily spoken foreign language. Output ONLY the translated spoken text.';
+    return DEFAULT_PROMPTS[targetLang] || 'You are an expert native translator. Translate the text into natural daily spoken foreign language. Preserve the exact line break and paragraph structure of the source text. Output ONLY the translated spoken text.';
   }
 
   resolveFetchConfig(request: TranslateRequest, key: string): { url: string; headers: Record<string, string> } {

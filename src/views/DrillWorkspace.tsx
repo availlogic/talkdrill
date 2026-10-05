@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { ArrowLeft, Printer, Eye, EyeOff, Award, SlidersHorizontal, Edit3, Archive, ArchiveRestore } from 'lucide-react';
 import { corpusService } from '../services/corpusService';
 import { drillCounterService } from '../services/drillCounterService';
 import { audioService } from '../services/audioService';
 import { playerEngine } from '../services/playerEngine';
+import { alignBilingualParagraphs, type AlignedParagraph } from '../utils/textAlignment';
 import { ZhengMatrix } from '../components/ZhengMatrix';
 import { BigDrillCapsule } from '../components/BigDrillCapsule';
 import { AudioPlayerBar } from '../components/AudioPlayerBar';
@@ -16,6 +17,31 @@ export interface DrillWorkspaceProps {
   onBack: () => void;
   onEdit?: () => void;
 }
+
+interface ParagraphListProps {
+  paragraphs: AlignedParagraph[];
+}
+
+export const BilingualParagraphList: React.FC<ParagraphListProps> = ({ paragraphs }) => {
+  const isMulti = paragraphs.length > 1;
+  const targetClasses = isMulti
+    ? 'text-xl sm:text-3xl font-serif font-medium leading-relaxed text-slate-900 dark:text-slate-50 tracking-wide select-none whitespace-pre-wrap break-words'
+    : 'text-2xl sm:text-4xl font-serif font-medium leading-relaxed sm:leading-loose text-slate-900 dark:text-slate-50 tracking-wide select-none whitespace-pre-wrap break-words';
+  const sourceClasses = isMulti
+    ? 'text-xs sm:text-sm text-slate-400 dark:text-slate-500 font-sans max-w-xl mx-auto whitespace-pre-wrap break-words mt-1 sm:mt-1.5'
+    : 'text-sm sm:text-base text-slate-400 dark:text-slate-500 font-sans max-w-xl mx-auto whitespace-pre-wrap break-words mt-3 sm:mt-4';
+
+  return (
+    <div className="w-full max-w-3xl space-y-6 sm:space-y-8">
+      {paragraphs.map((pair, idx) => (
+        <div key={idx} className="space-y-1.5 sm:space-y-2">
+          {pair.target && <p className={targetClasses}>{pair.target}</p>}
+          {pair.source && <p className={sourceClasses}>{pair.source}</p>}
+        </div>
+      ))}
+    </div>
+  );
+};
 
 export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBack, onEdit }) => {
   const [article, setArticle] = useState<Article | null>(null);
@@ -221,6 +247,27 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
     );
   };
 
+  const alignedParagraphs = useMemo(() => {
+    if (!article || isZenMode || !article.sourceText?.trim()) return [];
+    return alignBilingualParagraphs(article.targetText, article.sourceText);
+  }, [article, isZenMode]);
+
+  const renderCorpusDisplay = () => {
+    if (!article) return null;
+    const showInterleaved = !isZenMode && Boolean(article.sourceText?.trim());
+    return (
+      <section className="flex-1 flex flex-col justify-center items-center text-center p-6 sm:p-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm">
+        {showInterleaved ? (
+          <BilingualParagraphList paragraphs={alignedParagraphs} />
+        ) : (
+          <p className="text-2xl sm:text-4xl font-serif font-medium leading-relaxed sm:leading-loose text-slate-900 dark:text-slate-50 tracking-wide select-none whitespace-pre-wrap break-words">
+            {article.targetText}
+          </p>
+        )}
+      </section>
+    );
+  };
+
   if (!article) {
     return <div className="p-8 text-center text-slate-500">Loading workspace...</div>;
   }
@@ -351,16 +398,7 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
       {/* Main Workspace Body */}
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-6 flex flex-col justify-between space-y-6">
         {/* Foreign Target Corpus Display */}
-        <section className="flex-1 flex flex-col justify-center items-center text-center p-6 sm:p-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm">
-          <p className="text-2xl sm:text-4xl font-serif font-medium leading-relaxed sm:leading-loose text-slate-900 dark:text-slate-50 tracking-wide select-none whitespace-pre-wrap break-words">
-            {article.targetText}
-          </p>
-          {article.sourceText && !isZenMode && (
-            <p className="text-sm sm:text-base text-slate-400 dark:text-slate-500 mt-4 font-sans max-w-xl whitespace-pre-wrap break-words">
-              {article.sourceText}
-            </p>
-          )}
-        </section>
+        {renderCorpusDisplay()}
 
         {/* Audio Player in Non-Focus Mode (between Corpus Display and Tally Progress Board) */}
         {!isZenMode && renderAudioPlayerBar()}

@@ -11,7 +11,8 @@
     "src/services/corpusService.ts",
     "src/utils/themeManager.ts",
     "src/services/translationService.ts",
-    "src/utils/urlHelper.ts"
+    "src/utils/urlHelper.ts",
+    "src/utils/textAlignment.ts"
   ],
   "thresholds": {
     "high": 90,
