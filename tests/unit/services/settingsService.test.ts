@@ -18,6 +18,12 @@ describe('SettingsService (TDD)', () => {
     expect(settings.theme).toBe('system');
     expect(settings.translation.enabled).toBe(true);
     expect(settings.translation.baseUrl).toBe('https://api.anthropic.com/v1');
+    expect(settings.translation.customPrompts?.['es-ES']).toContain('Castilian Spanish');
+    expect(settings.translation.customPrompts?.['ja-JP']).toContain('Japanese');
+    expect(settings.translation.customPrompts?.['fr-FR']).toContain('French');
+    expect(settings.translation.customPrompts?.['de-DE']).toContain('German');
+    expect(settings.translation.customPrompts?.['en-US']).toContain('American English');
+    expect(settings.translation.customPrompts?.default).toContain('expert native translator');
     expect(settings.tts.provider).toBe('openai');
     expect(settings.printOptions.defaultTallyBoxes).toBe(100);
     expect(settings.dictionary.hotkey).toBe('Alt');

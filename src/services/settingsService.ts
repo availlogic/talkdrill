@@ -1,5 +1,6 @@
 import { db } from '../storage/db';
 import { type AppSettings } from '../types/models';
+import { DEFAULT_PROMPTS } from './translationService';
 
 export const DEFAULT_SETTINGS: AppSettings = {
   theme: 'system',
@@ -8,6 +9,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     baseUrl: 'https://api.anthropic.com/v1',
     apiKey: '',
     model: 'claude-3-5-sonnet-20241022',
+    customPrompts: { ...DEFAULT_PROMPTS },
     useProxy: true,
   },
   tts: {
@@ -36,7 +38,14 @@ export class SettingsService {
     }
     return {
       theme: record.value.theme ?? DEFAULT_SETTINGS.theme,
-      translation: { ...DEFAULT_SETTINGS.translation, ...record.value.translation },
+      translation: {
+        ...DEFAULT_SETTINGS.translation,
+        ...record.value.translation,
+        customPrompts: {
+          ...DEFAULT_PROMPTS,
+          ...(record.value.translation?.customPrompts ?? {}),
+        },
+      },
       tts: { ...DEFAULT_SETTINGS.tts, ...record.value.tts },
       printOptions: { ...DEFAULT_SETTINGS.printOptions, ...record.value.printOptions },
       dictionary: { ...DEFAULT_SETTINGS.dictionary, ...record.value.dictionary },

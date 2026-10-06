@@ -5,6 +5,8 @@ import { DictionaryService } from '../services/dictionaryService';
 import { themeManager } from '../utils/themeManager';
 import { speakText } from '../utils/speechHelper';
 import { type AppSettings } from '../types/models';
+import { SpokenPromptEditor } from '../components/SpokenPromptEditor';
+import { DEFAULT_PROMPTS } from '../services/translationService';
 
 export interface SettingsHubProps {
   onBack: () => void;
@@ -15,6 +17,7 @@ export const SettingsHub: React.FC<SettingsHubProps> = ({ onBack }) => {
   const [purgeConfirmText, setPurgeConfirmText] = useState('');
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [browserVoices, setBrowserVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [selectedPromptTab, setSelectedPromptTab] = useState('es-ES');
 
   useEffect(() => {
     settingsService.getSettings().then(setSettings);
@@ -42,6 +45,27 @@ export const SettingsHub: React.FC<SettingsHubProps> = ({ onBack }) => {
   const handleTestVoice = () => {
     const voiceURI = settings.dictionary?.voiceURI;
     speakText('Hello! This is a pronunciation test.', 'en-US', voiceURI);
+  };
+
+  const handlePromptChange = (tab: string, value: string) => {
+    setSettings((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        translation: {
+          ...prev.translation,
+          customPrompts: {
+            ...(prev.translation.customPrompts ?? {}),
+            [tab]: value,
+          },
+        },
+      };
+    });
+  };
+
+  const handleRestoreDefaultPrompt = (tab: string) => {
+    const defaultVal = DEFAULT_PROMPTS[tab] || DEFAULT_PROMPTS.default;
+    handlePromptChange(tab, defaultVal);
   };
 
   const handleSaveTranslation = async (e: React.FormEvent) => {
@@ -233,6 +257,14 @@ export const SettingsHub: React.FC<SettingsHubProps> = ({ onBack }) => {
               Eliminates browser CORS preflight restrictions when deploying on Cloudflare Pages.
             </p>
           </div>
+
+          <SpokenPromptEditor
+            activeTab={selectedPromptTab}
+            onSelectTab={setSelectedPromptTab}
+            prompts={settings.translation.customPrompts}
+            onPromptChange={handlePromptChange}
+            onRestoreDefault={handleRestoreDefaultPrompt}
+          />
         </div>
 
         <div className="flex justify-end pt-2">

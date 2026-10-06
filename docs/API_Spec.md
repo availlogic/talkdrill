@@ -182,6 +182,7 @@ export interface AppSettings {
     apiKey: string;
     model: string;
     customPrompt?: string;
+    customPrompts?: Record<string, string>;
   };
   tts: {
     provider: 'openai' | 'elevenlabs' | 'minimaxi' | 'custom';
@@ -237,6 +238,7 @@ export interface TranslateRequest {
   sourceLang: string;
   targetLang: string;
   customPrompt?: string;
+  customPrompts?: Record<string, string>;
 }
 
 export interface TranslateResponse {
@@ -248,7 +250,7 @@ export interface TranslateResponse {
 
 export interface ITranslationService {
   translate(request: TranslateRequest): Promise<TranslateResponse>;
-  buildSpokenPrompt(targetLang: string, customPrompt?: string): string;
+  buildSpokenPrompt(targetLang: string, customPrompt?: string, customPrompts?: Record<string, string>): string;
   testConnection(): Promise<boolean>;
 }
 ```

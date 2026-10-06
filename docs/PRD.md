@@ -233,7 +233,8 @@ flowchart TD
       baseUrl: string;        // 默认: https://api.anthropic.com/v1 或反向代理地址
       apiKey: string;
       model: string;          // 默认: claude-3-5-sonnet-20241022
-      customPrompt?: string;  // 自定义口语化系统提示词
+      customPrompt?: string;  // 自定义口语化系统提示词 (向下兼容)
+      customPrompts?: Record<string, string>; // 多语种口语翻译提示词映射 (es-ES, ja-JP, fr-FR, de-DE, en-US, default)
     };
     tts: {
       provider: 'openai' | 'elevenlabs' | 'minimaxi' | 'custom';

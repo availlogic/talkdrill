@@ -8,7 +8,7 @@ describe('TranslationService (TDD)', () => {
     service = new TranslationService();
   });
 
-  it('builds spoken prompt for Castilian Spanish and Japanese by default', () => {
+  it('builds spoken prompt for all supported default languages', () => {
     const promptEs = service.buildSpokenPrompt('es-ES');
     expect(promptEs).toContain('Castilian Spanish');
     expect(promptEs).toContain('Preserve the exact line break and paragraph structure');
@@ -17,14 +17,57 @@ describe('TranslationService (TDD)', () => {
     expect(promptJa).toContain('Japanese');
     expect(promptJa).toContain('Preserve the exact line break and paragraph structure');
 
-    const promptOther = service.buildSpokenPrompt('fr-FR');
+    const promptFr = service.buildSpokenPrompt('fr-FR');
+    expect(promptFr).toContain('French');
+    expect(promptFr).toContain('Preserve the exact line break and paragraph structure');
+
+    const promptDe = service.buildSpokenPrompt('de-DE');
+    expect(promptDe).toContain('German');
+    expect(promptDe).toContain('Preserve the exact line break and paragraph structure');
+
+    const promptEn = service.buildSpokenPrompt('en-US');
+    expect(promptEn).toContain('American English');
+    expect(promptEn).toContain('Preserve the exact line break and paragraph structure');
+
+    const promptOther = service.buildSpokenPrompt('it-IT');
     expect(promptOther).toContain('expert native translator');
     expect(promptOther).toContain('Preserve the exact line break and paragraph structure');
   });
 
-  it('allows custom prompt override', () => {
+  it('allows legacy custom prompt override', () => {
     const prompt = service.buildSpokenPrompt('es-ES', 'Custom dialect instructions');
     expect(prompt).toBe('Custom dialect instructions');
+  });
+
+  it('respects per-language customPrompts with highest priority', () => {
+    const prompt = service.buildSpokenPrompt('es-ES', 'Legacy fallback', {
+      'es-ES': 'Mexican Spanish custom instructions',
+      default: 'Universal custom',
+    });
+    expect(prompt).toBe('Mexican Spanish custom instructions');
+  });
+
+  it('falls back to customPrompts.default when specific language is not configured', () => {
+    const prompt = service.buildSpokenPrompt('it-IT', undefined, {
+      default: 'Universal custom for all languages',
+    });
+    expect(prompt).toBe('Universal custom for all languages');
+  });
+
+  it('ignores empty whitespace custom prompts and falls back to system defaults', () => {
+    const prompt = service.buildSpokenPrompt('de-DE', '   ', {
+      'de-DE': '   ',
+      default: '   ',
+    });
+    expect(prompt).toContain('German');
+  });
+
+  it('covers various combinations of fallback in buildSpokenPrompt', () => {
+    expect(service.buildSpokenPrompt('es-ES', 'Legacy', {})).toBe('Legacy');
+    expect(service.buildSpokenPrompt('es-ES', '   ', { default: 'Universal' })).toBe('Universal');
+    expect(service.buildSpokenPrompt('ja-JP', '', {})).toContain('conversational Japanese');
+    expect(service.buildSpokenPrompt('unknown-lang', undefined, undefined)).toContain('expert native translator');
+    expect(service.buildSpokenPrompt('default')).toContain('expert native translator');
   });
 
   it('throws error when API Key is missing', async () => {
@@ -62,6 +105,37 @@ describe('TranslationService (TDD)', () => {
     expect(res.modelUsed).toBe('claude-3-5-sonnet-20241022');
     expect(res.inputTokens).toBe(10);
     expect(res.outputTokens).toBe(8);
+  });
+
+  it('passes customPrompts through to system prompt when translating', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        content: [{ type: 'text', text: 'Bonjour' }],
+        model: 'claude-3-5-sonnet-20241022',
+        usage: { input_tokens: 5, output_tokens: 3 },
+      }),
+    });
+    globalThis.fetch = mockFetch;
+
+    await service.translate({
+      sourceText: 'Hello',
+      sourceLang: 'en',
+      targetLang: 'fr-FR',
+      apiKey: 'sk-ant-test',
+      baseUrl: 'https://api.anthropic.com/v1',
+      useProxy: false,
+      customPrompts: {
+        'fr-FR': 'Custom French instructions',
+      },
+    });
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://api.anthropic.com/v1/messages',
+      expect.objectContaining({
+        body: expect.stringContaining('Custom French instructions'),
+      })
+    );
   });
 
   it('trims whitespace and handles missing model and missing usage fields gracefully', async () => {

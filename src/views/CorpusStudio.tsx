@@ -65,6 +65,7 @@ export const CorpusStudio: React.FC<CorpusStudioProps> = ({ onCancel, onStartDri
         baseUrl: settings.translation.baseUrl,
         model: settings.translation.model,
         customPrompt: settings.translation.customPrompt,
+        customPrompts: settings.translation.customPrompts,
         useProxy: settings.translation.useProxy,
       });
       setTargetText(result.translatedText);

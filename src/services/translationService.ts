@@ -8,6 +8,7 @@ export interface TranslateRequest {
   baseUrl?: string | undefined;
   model?: string | undefined;
   customPrompt?: string | undefined;
+  customPrompts?: Record<string, string> | undefined;
   useProxy?: boolean | undefined;
 }
 
@@ -20,20 +21,40 @@ export interface TranslateResponse {
 
 export interface ITranslationService {
   translate(request: TranslateRequest): Promise<TranslateResponse>;
-  buildSpokenPrompt(targetLang: string, customPrompt?: string): string;
+  buildSpokenPrompt(
+    targetLang: string,
+    customPrompt?: string,
+    customPrompts?: Record<string, string>
+  ): string;
 }
 
-const DEFAULT_PROMPTS: Record<string, string> = {
+export const DEFAULT_PROMPTS: Record<string, string> = {
   'es-ES': 'You are an expert native linguist specializing in Castilian Spanish spoken fluency. Translate the following text into natural, idiomatic European Spanish as spoken in daily life in Spain. Preserve the exact line break and paragraph structure of the source text. Do not use textbook phrasing. Output ONLY the translated foreign spoken text.',
   'ja-JP': 'You are an expert native linguist specializing in natural conversational Japanese. Translate the following text into natural, idiomatic spoken Japanese. Preserve the exact line break and paragraph structure of the source text. Output ONLY the translated foreign spoken text.',
+  'fr-FR': 'You are an expert native linguist specializing in colloquial French spoken fluency. Translate the following text into natural, idiomatic everyday spoken French as used in daily life in France. Preserve the exact line break and paragraph structure of the source text. Do not use overly formal or textbook phrasing. Output ONLY the translated foreign spoken text.',
+  'de-DE': 'You are an expert native linguist specializing in natural conversational German. Translate the following text into natural, idiomatic everyday spoken German as spoken in daily life in Germany. Preserve the exact line break and paragraph structure of the source text. Do not use stiff textbook phrasing. Output ONLY the translated foreign spoken text.',
+  'en-US': 'You are an expert native linguist specializing in natural American English spoken fluency. Translate the following text into natural, idiomatic daily conversational American English. Preserve the exact line break and paragraph structure of the source text. Do not use textbook phrasing. Output ONLY the translated spoken text.',
+  'default': 'You are an expert native translator. Translate the text into natural daily spoken foreign language. Preserve the exact line break and paragraph structure of the source text. Output ONLY the translated spoken text.',
 };
 
 export class TranslationService implements ITranslationService {
-  buildSpokenPrompt(targetLang: string, customPrompt?: string): string {
+  buildSpokenPrompt(
+    targetLang: string,
+    customPrompt?: string,
+    customPrompts?: Record<string, string>
+  ): string {
+    const specific = customPrompts?.[targetLang]?.trim();
+    if (specific) {
+      return specific;
+    }
     if (customPrompt && customPrompt.trim().length > 0) {
       return customPrompt.trim();
     }
-    return DEFAULT_PROMPTS[targetLang] || 'You are an expert native translator. Translate the text into natural daily spoken foreign language. Preserve the exact line break and paragraph structure of the source text. Output ONLY the translated spoken text.';
+    const fallbackCustom = customPrompts?.default?.trim();
+    if (fallbackCustom) {
+      return fallbackCustom;
+    }
+    return DEFAULT_PROMPTS[targetLang] || DEFAULT_PROMPTS.default;
   }
 
   resolveFetchConfig(request: TranslateRequest, key: string): { url: string; headers: Record<string, string> } {
@@ -71,7 +92,7 @@ export class TranslationService implements ITranslationService {
 
     const { url, headers } = this.resolveFetchConfig(request, key);
     const model = request.model || 'claude-3-5-sonnet-20241022';
-    const systemPrompt = this.buildSpokenPrompt(request.targetLang, request.customPrompt);
+    const systemPrompt = this.buildSpokenPrompt(request.targetLang, request.customPrompt, request.customPrompts);
 
     const payload = {
       model,

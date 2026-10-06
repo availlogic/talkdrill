@@ -24,13 +24,13 @@ TalkDrill 专为高频肌肉记忆特训而生：
   ├── CorpusStudio (AI 口语翻译默认 / 直接录入 / 篇目与音频可编辑 / 自有与第三方生成音频导入)
   ├── DrillWorkspace (跟读特训空间 / 正字矩阵 / 触控大胶囊 / 极简专注模式 / 直接编辑与归档)
   ├── PrintExportModal (60/100 格纸质打卡表与 Markdown 导出)
-  └── SettingsHub (Anthropic BYOK 凭据与同源代理 / 主题模式 / 危险区原子清除)
+  ├── SettingsHub (Anthropic BYOK 凭据与同源代理 / 多语种口语提示词 Tab 定制 / 主题模式 / 危险区原子清除)
          │
 [Domain Services]
   ├── corpusService (语料篇目生命周期管理，级联删除音频与打卡日志)
   ├── drillCounterService (微秒级内存计数 + 150ms 防抖批处理持久化)
   ├── playerEngine (原生 HTMLAudio 引擎，音调保持变速 0.5x-1.5x，A-B 精确复读)
-  ├── translationService (Anthropic BYOK 地道口语翻译服务)
+  ├── translationService (Anthropic BYOK 多语种地道口语翻译服务，支持西班牙语/日语/法语/德语/英语及通用兜底)
   ├── dictionaryService (词汇与短语释义查询，离线 IndexedDB 缓存与 Anthropic BYOK 双轨支持)
   ├── audioService (本地与外部生成音频 <= 50MB 上传校验 / 原生 Blob 持久化 / 文件导出)
   └── printExportService (纯函数 60/100 格打卡表与 Markdown 渲染)

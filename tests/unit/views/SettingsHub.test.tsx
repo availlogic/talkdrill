@@ -252,4 +252,79 @@ describe('SettingsHub View (TDD)', () => {
     const utterance = mockSpeak.mock.calls[0][0];
     expect(utterance.voice).toEqual(dummyVoices[0]);
   });
+
+  it('renders spoken translation prompt tabs with default prompts and allows tab switching', async () => {
+    render(<SettingsHub onBack={vi.fn()} />);
+
+    // Check heading/label
+    expect(await screen.findByText('Spoken Translation Prompts')).toBeDefined();
+
+    // Verify all tabs exist
+    const spanishTab = screen.getByRole('tab', { name: /Spanish/i });
+    const japaneseTab = screen.getByRole('tab', { name: /Japanese/i });
+    const frenchTab = screen.getByRole('tab', { name: /French/i });
+    const germanTab = screen.getByRole('tab', { name: /German/i });
+    const englishTab = screen.getByRole('tab', { name: /English/i });
+    const defaultTab = screen.getByRole('tab', { name: /Others/i });
+
+    expect(spanishTab).toBeDefined();
+    expect(japaneseTab).toBeDefined();
+    expect(frenchTab).toBeDefined();
+    expect(germanTab).toBeDefined();
+    expect(englishTab).toBeDefined();
+    expect(defaultTab).toBeDefined();
+
+    // Textarea shows Castilian Spanish initially
+    const textarea = screen.getByLabelText(/Spoken Prompt for/i) as HTMLTextAreaElement;
+    expect(textarea.value).toContain('Castilian Spanish');
+
+    // Switch to Japanese
+    fireEvent.click(japaneseTab);
+    expect(textarea.value).toContain('conversational Japanese');
+
+    // Switch to French
+    fireEvent.click(frenchTab);
+    expect(textarea.value).toContain('French spoken fluency');
+
+    // Switch to Others (Default)
+    fireEvent.click(defaultTab);
+    expect(textarea.value).toContain('expert native translator');
+  });
+
+  it('allows editing prompts per language and persists them upon saving', async () => {
+    render(<SettingsHub onBack={vi.fn()} />);
+
+    const spanishTab = await screen.findByRole('tab', { name: /Spanish/i });
+    fireEvent.click(spanishTab);
+
+    const textarea = screen.getByLabelText(/Spoken Prompt for/i) as HTMLTextAreaElement;
+    fireEvent.change(textarea, { target: { value: 'Mexican Spanish custom prompt test' } });
+
+    const saveBtn = screen.getByRole('button', { name: 'Save Translation Settings' });
+    fireEvent.click(saveBtn);
+
+    await waitFor(async () => {
+      const saved = await settingsService.getSettings();
+      expect(saved.translation.customPrompts?.['es-ES']).toBe('Mexican Spanish custom prompt test');
+      // Other defaults are preserved
+      expect(saved.translation.customPrompts?.['ja-JP']).toContain('Japanese');
+      expect(await screen.findByText('Translation configuration saved.')).toBeDefined();
+    });
+  });
+
+  it('allows restoring default prompt for current language tab', async () => {
+    render(<SettingsHub onBack={vi.fn()} />);
+
+    const spanishTab = await screen.findByRole('tab', { name: /Spanish/i });
+    fireEvent.click(spanishTab);
+
+    const textarea = screen.getByLabelText(/Spoken Prompt for/i) as HTMLTextAreaElement;
+    fireEvent.change(textarea, { target: { value: 'Changed text' } });
+    expect(textarea.value).toBe('Changed text');
+
+    const restoreBtn = screen.getByRole('button', { name: /Restore Default/i });
+    fireEvent.click(restoreBtn);
+
+    expect(textarea.value).toContain('Castilian Spanish');
+  });
 });

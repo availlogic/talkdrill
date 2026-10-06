@@ -57,6 +57,7 @@ export interface AppSettings {
     apiKey: string;
     model: string;
     customPrompt?: string | undefined;
+    customPrompts?: Record<string, string> | undefined;
     useProxy?: boolean | undefined;
   };
   tts: {
