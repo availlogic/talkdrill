@@ -3,6 +3,7 @@ import { Plus, Settings, Trash2, HardDrive, Sparkles, Edit3, Archive, ArchiveRes
 import { corpusService } from '../services/corpusService';
 import { checkStorageCapacity } from '../utils/storageQuota';
 import { type Article } from '../types/models';
+import { AppLogo } from '../components/AppLogo';
 
 export interface LibraryOverviewProps {
   onSelectArticle: (id: string) => void;
@@ -108,9 +109,7 @@ export const LibraryOverview: React.FC<LibraryOverviewProps> = ({
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xl shadow-md shadow-blue-500/20">
-            T
-          </div>
+          <AppLogo />
           <div>
             <h1 className="text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
               TalkDrill

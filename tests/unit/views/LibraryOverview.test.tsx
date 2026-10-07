@@ -11,6 +11,14 @@ describe('LibraryOverview View (TDD)', () => {
     await db.drillLogs.clear();
   });
 
+  it('renders header with TalkDrill brand calligraphy AppLogo', async () => {
+    render(<LibraryOverview onSelectArticle={vi.fn()} onNewArticle={vi.fn()} onOpenSettings={vi.fn()} />);
+
+    expect(screen.getByRole('img', { name: 'TalkDrill Logo' })).toBeDefined();
+    expect(screen.getByText('TalkDrill')).toBeDefined();
+    expect(screen.getByText('Offline Shadowing')).toBeDefined();
+  });
+
   it('renders empty state illustration and CTA when no drills exist', async () => {
     render(<LibraryOverview onSelectArticle={vi.fn()} onNewArticle={vi.fn()} onOpenSettings={vi.fn()} />);
 
