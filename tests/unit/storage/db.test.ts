@@ -118,4 +118,64 @@ describe('TalkDrillDatabase & Storage Layer', () => {
     expect(await db.audios.where('articleId').equals(articleId).count()).toBe(0);
     expect(await db.drillLogs.where('articleId').equals(articleId).count()).toBe(0);
   });
+
+  it('exports and applies sync snapshot seamlessly', async () => {
+    const article = {
+      id: 'art-sync-1',
+      title: 'Sync Test',
+      sourceText: 'Source',
+      targetText: 'Target',
+      sourceLang: 'en',
+      targetLang: 'es',
+      mode: 'direct_foreign' as const,
+      targetCount: 100,
+      currentCount: 5,
+      createdAt: 1000,
+      updatedAt: 1000,
+      isArchived: 0,
+    };
+    await db.articles.add(article);
+    await db.drillLogs.add({
+      articleId: 'art-sync-1',
+      delta: 1,
+      resultingCount: 1,
+      timestamp: 1005,
+    });
+    await db.audios.add({
+      id: 'aud-sync-1',
+      articleId: 'art-sync-1',
+      blob: new Blob(['audio']),
+      mimeType: 'audio/mpeg',
+      fileName: 'test.mp3',
+      fileSize: 5,
+      duration: 1,
+      sourceType: 'tts',
+      createdAt: 1000,
+    });
+    await db.wordLookups.add({
+      lang: 'en',
+      text: 'apple',
+      translation: 'fruit',
+      source: 'cache',
+      timestamp: 1000,
+    });
+
+    const snapshot = await db.exportSnapshot();
+    expect(snapshot.schemaVersion).toBe(1);
+    expect(snapshot.articles).toHaveLength(1);
+    expect(snapshot.drillLogs).toHaveLength(1);
+    expect(snapshot.audioMetas).toHaveLength(1);
+    expect(snapshot.wordLookups).toHaveLength(1);
+    expect(snapshot.articles[0].id).toBe('art-sync-1');
+
+    await db.clearAllData();
+    expect(await db.articles.count()).toBe(0);
+    expect(await db.drillLogs.count()).toBe(0);
+
+    await db.applyMergedSnapshot(snapshot);
+    expect(await db.articles.count()).toBe(1);
+    expect(await db.drillLogs.count()).toBe(1);
+    const restored = await db.articles.get('art-sync-1');
+    expect(restored?.title).toBe('Sync Test');
+  });
 });

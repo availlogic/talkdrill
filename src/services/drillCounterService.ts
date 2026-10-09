@@ -1,4 +1,5 @@
 import { db } from '../storage/db';
+import { syncManager } from './syncManager';
 import { type ZhengStrokeState, type MilestoneResult } from '../types/models';
 import { calculateZhengStrokes, checkMilestone } from '../utils/zhengMath';
 
@@ -109,6 +110,8 @@ export class DrillCounterService {
       }));
       await db.drillLogs.bulkAdd(records);
     }
+
+    syncManager.scheduleSync();
   }
 
   async flushPendingSaves(): Promise<void> {

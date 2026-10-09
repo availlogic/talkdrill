@@ -74,6 +74,65 @@ export class TalkDrillDatabase extends Dexie {
       await this.drillLogs.where('articleId').equals(articleId).delete();
     });
   }
+
+  async exportSnapshot(): Promise<import('../services/syncMerger').SyncSnapshot> {
+    const [articles, logs, settings, lookups, audios] = await Promise.all([
+      this.articles.toArray(),
+      this.drillLogs.toArray(),
+      this.settings.toArray(),
+      this.wordLookups.toArray(),
+      this.audios.toArray(),
+    ]);
+
+    const audioMetas = audios.map((a) => ({
+      id: a.id,
+      articleId: a.articleId,
+      mimeType: a.mimeType,
+      fileName: a.fileName,
+      fileSize: a.fileSize,
+      duration: a.duration,
+      sourceType: a.sourceType,
+      createdAt: a.createdAt,
+    }));
+
+    return {
+      schemaVersion: 1,
+      exportedAt: Date.now(),
+      articles,
+      drillLogs: logs.map(({ id: _id, ...rest }) => rest),
+      settings,
+      wordLookups: lookups.map(({ id: _id, ...rest }) => rest),
+      audioMetas,
+    };
+  }
+
+  async clearAllData(): Promise<void> {
+    const tables = [this.articles, this.audios, this.drillLogs, this.settings, this.wordLookups];
+    await this.transaction('rw', tables, async () => {
+      await Promise.all([
+        this.articles.clear(),
+        this.audios.clear(),
+        this.drillLogs.clear(),
+        this.settings.clear(),
+        this.wordLookups.clear(),
+      ]);
+    });
+  }
+
+  async applyMergedSnapshot(snapshot: import('../services/syncMerger').SyncSnapshot): Promise<void> {
+    const tables = [this.articles, this.drillLogs, this.settings, this.wordLookups];
+    await this.transaction('rw', tables, async () => {
+      if (snapshot.articles?.length) await this.articles.bulkPut(snapshot.articles);
+      if (snapshot.settings?.length) await this.settings.bulkPut(snapshot.settings);
+      if (snapshot.wordLookups?.length) {
+        await this.wordLookups.bulkPut(snapshot.wordLookups as WordLookupRecord[]);
+      }
+      if (snapshot.drillLogs?.length) {
+        await this.drillLogs.clear();
+        await this.drillLogs.bulkAdd(snapshot.drillLogs as DrillLogRecord[]);
+      }
+    });
+  }
 }
 
 export const db = new TalkDrillDatabase();

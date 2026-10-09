@@ -1,4 +1,5 @@
 import { db, type AudioRecord } from '../storage/db';
+import { syncManager } from './syncManager';
 import { type AudioItem } from '../types/models';
 
 export interface SynthesizeAudioRequest {
@@ -197,9 +198,45 @@ export class AudioService implements IAudioService {
     return mapRecordToAudioItem(record);
   }
 
+  private async fetchAndCacheCloudAudio(
+    articleId: string,
+    audioId: string
+  ): Promise<AudioRecord | null> {
+    const syncKey = syncManager.getSyncKey();
+    if (!syncKey) return null;
+    try {
+      const res = await fetch(`/api/sync/audio/${audioId}`, {
+        headers: { 'x-sync-key': syncKey },
+      });
+      if (!res.ok) return null;
+      const blob = await res.blob();
+      const record: AudioRecord = {
+        id: audioId,
+        articleId,
+        blob,
+        mimeType: blob.type || 'audio/mpeg',
+        fileName: 'cloud-audio.mp3',
+        fileSize: blob.size,
+        duration: 0,
+        sourceType: 'tts',
+        createdAt: Date.now(),
+      };
+      await db.audios.add(record);
+      return record;
+    } catch {
+      return null;
+    }
+  }
+
   async getAudioByArticleId(articleId: string): Promise<AudioItem | null> {
     const record = await db.audios.where('articleId').equals(articleId).first();
-    return record ? mapRecordToAudioItem(record) : null;
+    if (record) return mapRecordToAudioItem(record);
+
+    const article = await db.articles.get(articleId);
+    if (!article?.audioId) return null;
+
+    const cloudRecord = await this.fetchAndCacheCloudAudio(articleId, article.audioId);
+    return cloudRecord ? mapRecordToAudioItem(cloudRecord) : null;
   }
 
   async deleteAudio(id: string): Promise<void> {

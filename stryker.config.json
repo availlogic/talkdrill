@@ -16,7 +16,9 @@
     "src/utils/speechHelper.ts",
     "src/services/dictionaryService.ts",
     "src/hooks/useWordLookup.ts",
-    "src/utils/hotkeyHelper.ts"
+    "src/utils/hotkeyHelper.ts",
+    "src/utils/syncCrypto.ts",
+    "src/services/syncMerger.ts"
   ],
   "thresholds": {
     "high": 90,

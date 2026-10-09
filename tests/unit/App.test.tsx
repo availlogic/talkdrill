@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import App from '../../src/App';
 import { db } from '../../src/storage/db';
@@ -114,5 +114,36 @@ describe('App Root Shell (TDD)', () => {
     fireEvent.click(editBtn);
 
     expect(window.location.hash).toBe('#studio?edit=art-workspace-edit');
+  });
+
+  it('automatically binds sync key and triggers sync when pair query param is detected', async () => {
+    const validKey = 'TD-9X7K-M2P4-W8N3-7B5D';
+    window.history.pushState({}, '', `/?pair=${validKey}`);
+
+    const { syncManager } = await import('../../src/services/syncManager');
+    const syncSpy = vi.spyOn(syncManager, 'syncNow').mockResolvedValue({ success: true });
+
+    render(<App />);
+
+    expect(syncManager.getSyncKey()).toBe(validKey);
+    expect(syncSpy).toHaveBeenCalled();
+  });
+
+  it('triggers syncNow when document visibility changes to visible', async () => {
+    const validKey = 'TD-9X7K-M2P4-W8N3-7B5D';
+    const { syncManager } = await import('../../src/services/syncManager');
+    syncManager.setSyncKey(validKey);
+    const syncSpy = vi.spyOn(syncManager, 'syncNow').mockResolvedValue({ success: true });
+
+    render(<App />);
+    syncSpy.mockClear();
+
+    Object.defineProperty(document, 'visibilityState', {
+      value: 'visible',
+      configurable: true,
+    });
+    fireEvent(document, new Event('visibilitychange'));
+
+    expect(syncSpy).toHaveBeenCalled();
   });
 });

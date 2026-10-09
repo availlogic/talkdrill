@@ -6,6 +6,22 @@ import { SettingsHub } from './views/SettingsHub';
 import { audioContextManager } from './utils/audioContextManager';
 import { themeManager } from './utils/themeManager';
 import { settingsService } from './services/settingsService';
+import { syncManager } from './services/syncManager';
+import { isValidSyncKey } from './utils/syncCrypto';
+
+export function handleUrlPairing(): boolean {
+  if (typeof window === 'undefined') return false;
+  const searchParams = new URLSearchParams(window.location.search);
+  const pairKey = searchParams.get('pair') || searchParams.get('sync_key');
+  if (pairKey && isValidSyncKey(pairKey)) {
+    syncManager.setSyncKey(pairKey);
+    syncManager.syncNow();
+    const cleanUrl = window.location.pathname + window.location.hash;
+    window.history.replaceState({}, document.title, cleanUrl);
+    return true;
+  }
+  return false;
+}
 
 export function parseRoute(hash: string): { route: string; params: Record<string, string> } {
   const clean = hash.replace(/^#\/?/, '');
@@ -49,6 +65,24 @@ export const App: React.FC = () => {
       window.removeEventListener('hashchange', handleHashChange);
       window.removeEventListener('pointerdown', handleFirstGesture);
       window.removeEventListener('keydown', handleFirstGesture);
+    };
+  }, []);
+
+  useEffect(() => {
+    const paired = handleUrlPairing();
+    if (!paired && syncManager.getSyncKey()) {
+      syncManager.syncNow();
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && syncManager.getSyncKey()) {
+        syncManager.syncNow();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 

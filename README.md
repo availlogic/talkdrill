@@ -25,20 +25,25 @@ TalkDrill 专为高频肌肉记忆特训而生：
   ├── DrillWorkspace (跟读特训空间 / 正字矩阵 / 触控大胶囊 / 极简专注模式 / 直接编辑与归档)
   ├── PrintExportModal (60/100 格纸质打卡表与 Markdown 导出)
   ├── SettingsHub (Anthropic BYOK 凭据与同源代理 / 多语种口语提示词 Tab 定制 / 主题模式 / 危险区原子清除)
+  ├── CrossDeviceSyncSection (跨设备免密云端同步管理 / 配对密钥生成 / 状态指示)
+  ├── SyncPairingModal (高熵密钥二维码扫码配对弹窗 / 一键复制)
   └── AppLogo (中文书法体“正”字品牌矢量组件 / 40px Header / Favicon 与 PWA 视觉统一)
          │
 [Domain Services]
   ├── corpusService (语料篇目生命周期管理，级联删除音频与打卡日志)
   ├── drillCounterService (微秒级内存计数 + 150ms 防抖批处理持久化)
+  ├── syncManager (跨设备同步调度器 / 防抖推送 / 页面可见性感知 / 远端拉取与推送)
+  ├── syncMerger (双向智能合并器 / 打卡日志追加并集 / LWW 冲突解决 / 配置与词典合并)
   ├── playerEngine (原生 HTMLAudio 引擎，音调保持变速 0.5x-1.5x，A-B 精确复读)
   ├── translationService (Anthropic BYOK 多语种地道口语翻译服务，支持西班牙语/日语/法语/德语/英语及通用兜底)
   ├── dictionaryService (词汇与短语释义查询，离线 IndexedDB 缓存与 Anthropic BYOK 双轨支持)
-  ├── audioService (本地与外部生成音频 <= 50MB 上传校验 / 原生 Blob 持久化 / 文件导出)
+  ├── audioService (本地与外部生成音频 <= 50MB 上传校验 / 原生 Blob 持久化 / 云端按需惰性加载)
   └── printExportService (纯函数 60/100 格打卡表与 Markdown 渲染)
          │
 [Core Utils & Storage]
   ├── textAlignment (纯函数双语段落与单行对话智能对齐匹配)
   ├── speechHelper (浏览器原生 Web Speech API 语音合成与标准发音)
+  ├── syncCrypto (128 位 CSPRNG 高熵同步密钥生成 / Base32 编码 / SHA-256 租户哈希)
   ├── zhengMath (纯函数正字笔画计算与阶段里程碑判定：50/150/300/500 遍)
   ├── audioContextManager (用户手势即时解锁浏览器 AudioContext)
   ├── storageQuota (StorageManager API 存储配额与持久化检查)
@@ -71,6 +76,11 @@ TalkDrill 专为高频肌肉记忆特训而生：
    - 特训空间内划选外语单词或短语，若本地存在缓存直接毫秒级秒开（0 token 消耗与 0 延迟）；若无缓存则弹出带有快捷键提示（默认 Option / Alt，可在设置中配置）的提示浮窗，用户按下快捷键或点击按钮时按需调用 AI 查询，有效避免频繁调用。
    - 释义本地缓存支持生命周期管理（默认 2 天，可在设置中自由调整 1 天、2 天、7 天、30 天或永久，或手动一键清空），过期记录在启动时自动清除。
    - 集成浏览器原生 Web Speech API 扬声器发音朗读，可在设置页自定义挑选浏览器所支持的 Voice 并在线试听（默认自动按目标语言自适应），并与特训节奏智能联动（跟读打卡时自动收起浮窗避免遮挡）。
+9. **零账号跨设备免密云端同步 (Passwordless Cross-Device Cloud Sync via Cloudflare R2 & QR Pairing)**：
+   - 彻底摒弃传统繁琐的中心化注册、密码管理与 OAuth 体系，基于 Web Cryptography 128 位 CSPRNG 生成防碰撞的高熵同步密钥 (Sync Key)；
+   - 桌面端一键生成配对二维码，iPhone 14 / iPad 等移动设备原生相机扫码直连，自动握手激活并完成双向智能合并；
+   - 底层深度对接 Cloudflare R2 对象存储（利用每月 10GB 免费存储与 0 出网流量费特性），基于 SHA-256 哈希命名空间实现严密租户隔离；
+   - 采用分层同步策略：打卡日志采用追加事件流并集（Union）合并，离线练习记录永不丢失；篇目与配置按时间戳 LWW 合并；大体积音频按需惰性流式拉取并落地本地 IndexedDB 缓存，兼顾多端一致性与移动蜂窝流量节省。
 
 ---
 
@@ -169,6 +179,24 @@ npx wrangler pages deploy dist --project-name talkdrill
 ```
 
 或者在 Cloudflare Dashboard 中连接 GitHub 仓库，设置构建命令为 `npm run build`，输出目录为 `dist`，提交代码即可自动化部署全球 Anycast 边缘网络。
+
+### Cloudflare R2 免费云端存储桶绑定 (跨设备多端同步)
+若需启用跨设备云端免密同步功能，需在 Cloudflare Pages 项目后台绑定 R2 存储桶（每月 10GB 免费存储容量 + 100 万次写入 + 1000 万次读取，0 出网流量费，完全在免费额度内）：
+
+1. **第一步：创建 R2 存储桶**：
+   - 登录 Cloudflare Dashboard，在左侧导航进入 **Storage & Databases** -> **R2 Object Storage**；
+   - 点击 **Create bucket**，输入存储桶名称（例如 `talkdrill-sync`），位置选默认的 **Automatic**，完成创建。
+2. **第二步：在 Pages 项目中添加 R2 绑定**：
+   - 进入 **Workers & Pages** -> 选择 **talkdrill** Pages 项目；
+   - 进入 **Settings (设置)** -> **Functions (函数)** -> 下拉找到 **R2 bucket bindings (R2 存储桶绑定)**，点击 **Add binding**；
+   - 填写变量名：**Variable name** 填 `TALKDRILL_BUCKET`（大小写敏感，代码亦兼容 `SYNC_BUCKET`）；
+   - 选择存储桶：**R2 bucket** 下拉选择第一步创建的 `talkdrill-sync`（确保在 **Production** 环境下生效）；
+   - 点击 **Save (保存)**。
+3. **第三步：重新触发部署生效 (关键步骤)**：
+   - 由于 Cloudflare Pages Functions 绑定仅对新部署生效，修改配置后需在 **Deployments** 页面点击最新记录右侧的 `...` -> **Retry deployment (重新构建)**（或直接 push 新 commit 自动触发构建部署）。
+4. **验证同步生效**：
+   - 访问 TalkDrill 网页进入「设置」开启云同步，产生打卡数据后，在 Cloudflare 控制台 `talkdrill-sync` 存储桶中可见 `sync/<hash>/snapshot.json` 对象，即代表边缘函数与对象存储连接成功。
+
 
 ### LLM 兼容服务与同源代理配置说明
 系统通过 `getAnthropicMessagesEndpoint()` 与 `TranslationService` 自动识别并归一化各类 Anthropic 兼容端点：

@@ -1,4 +1,5 @@
 import { db, type ArticleRecord } from '../storage/db';
+import { syncManager } from './syncManager';
 import { type Article, type LanguageMode } from '../types/models';
 
 export interface CreateArticleInput {
@@ -72,6 +73,7 @@ export class CorpusService implements ICorpusService {
     };
 
     await db.articles.add(record);
+    syncManager.scheduleSync();
     return mapRecordToArticle(record);
   }
 
@@ -120,12 +122,14 @@ export class CorpusService implements ICorpusService {
     if (input.isArchived !== undefined) updates.isArchived = input.isArchived ? 1 : 0;
 
     await db.articles.update(id, updates);
+    syncManager.scheduleSync();
     const updated = await db.articles.get(id);
     return mapRecordToArticle(updated!);
   }
 
   async deleteArticle(id: string): Promise<void> {
     await db.deleteArticleCascade(id);
+    syncManager.scheduleSync();
   }
 
   async parseTextFile(file: File): Promise<string> {

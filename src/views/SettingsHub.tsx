@@ -7,6 +7,7 @@ import { speakText } from '../utils/speechHelper';
 import { type AppSettings } from '../types/models';
 import { SpokenPromptEditor } from '../components/SpokenPromptEditor';
 import { DEFAULT_PROMPTS } from '../services/translationService';
+import { CrossDeviceSyncSection } from '../components/CrossDeviceSyncSection';
 
 export interface SettingsHubProps {
   onBack: () => void;
@@ -420,6 +421,9 @@ export const SettingsHub: React.FC<SettingsHubProps> = ({ onBack }) => {
           </button>
         </div>
       </form>
+
+      {/* Cross-Device Sync */}
+      <CrossDeviceSyncSection />
 
       {/* Danger Zone: Purge */}
       <div className="bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 rounded-2xl p-5 space-y-4">

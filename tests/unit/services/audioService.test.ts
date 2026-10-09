@@ -242,5 +242,40 @@ describe('AudioService (TDD)', () => {
     const art = await db.articles.get('art-del-audio');
     expect(art?.audioId).toBeUndefined();
   });
+
+  it('lazily fetches audio from cloud when local audio is missing but article has audioId', async () => {
+    const { syncManager } = await import('../../../src/services/syncManager');
+    syncManager.setSyncKey('TD-9X7K-M2P4-W8N3-7B5D');
+
+    await db.articles.add({
+      id: 'art-lazy',
+      title: 'Lazy Title',
+      sourceText: '',
+      targetText: 'Target',
+      sourceLang: 'en',
+      targetLang: 'es',
+      mode: 'direct_foreign',
+      targetCount: 100,
+      currentCount: 0,
+      audioId: 'aud-cloud-123',
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      isArchived: 0,
+    });
+
+    const mockBlob = new Blob(['cloud-audio'], { type: 'audio/mpeg' });
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      blob: async () => mockBlob,
+    });
+
+    const audio = await service.getAudioByArticleId('art-lazy');
+    expect(audio).toBeDefined();
+    expect(audio?.id).toBe('aud-cloud-123');
+
+    // Should now be cached in local IndexedDB
+    const cached = await db.audios.get('aud-cloud-123');
+    expect(cached).toBeDefined();
+  });
 });
 
