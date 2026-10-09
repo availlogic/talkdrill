@@ -178,4 +178,80 @@ describe('TalkDrillDatabase & Storage Layer', () => {
     const restored = await db.articles.get('art-sync-1');
     expect(restored?.title).toBe('Sync Test');
   });
+
+  it('self-heals missing article.audioId from audios table during exportSnapshot', async () => {
+    await db.articles.add({
+      id: 'art-no-audio-id',
+      title: 'Missing Audio ID',
+      sourceText: '',
+      targetText: 'Hello',
+      sourceLang: 'en',
+      targetLang: 'es',
+      mode: 'direct_foreign',
+      targetCount: 100,
+      currentCount: 0,
+      // audioId intentionally omitted / undefined
+      createdAt: 1000,
+      updatedAt: 1000,
+      isArchived: 0,
+    });
+
+    await db.audios.add({
+      id: 'aud-healing-1',
+      articleId: 'art-no-audio-id',
+      blob: new Blob(['audio']),
+      mimeType: 'audio/mpeg',
+      fileName: 'healing.mp3',
+      fileSize: 10,
+      duration: 1,
+      sourceType: 'tts',
+      createdAt: 1000,
+    });
+
+    const snapshot = await db.exportSnapshot();
+    const exportedArt = snapshot.articles.find((a) => a.id === 'art-no-audio-id');
+    expect(exportedArt?.audioId).toBe('aud-healing-1');
+
+    // Local database should also be healed
+    const localArt = await db.articles.get('art-no-audio-id');
+    expect(localArt?.audioId).toBe('aud-healing-1');
+  });
+
+  it('links missing article.audioId from snapshot.audioMetas in applyMergedSnapshot', async () => {
+    const remoteSnapshot = {
+      schemaVersion: 1,
+      exportedAt: 1000,
+      articles: [{
+        id: 'art-remote-no-audio-id',
+        title: 'Remote Art',
+        sourceText: '',
+        targetText: 'Remote',
+        sourceLang: 'en',
+        targetLang: 'es',
+        mode: 'direct_foreign' as const,
+        targetCount: 100,
+        currentCount: 0,
+        createdAt: 1000,
+        updatedAt: 1000,
+        isArchived: 0,
+      }],
+      drillLogs: [],
+      settings: [],
+      audioMetas: [{
+        id: 'aud-remote-meta-1',
+        articleId: 'art-remote-no-audio-id',
+        mimeType: 'audio/mpeg',
+        fileName: 'remote.mp3',
+        fileSize: 20,
+        duration: 2,
+        sourceType: 'tts' as const,
+        createdAt: 1000,
+      }],
+    };
+
+    await db.applyMergedSnapshot(remoteSnapshot);
+    const appliedArt = await db.articles.get('art-remote-no-audio-id');
+    expect(appliedArt?.audioId).toBe('aud-remote-meta-1');
+  });
 });
+

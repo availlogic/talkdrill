@@ -114,6 +114,79 @@ describe('SyncManager (TDD)', () => {
       expect(manager.getState().status).toBe('error');
       expect(manager.getState().errorMessage).toContain('Network error');
     });
+
+    it('uploads unsynced local audios to /api/sync/audio/[id] and marks them as synced', async () => {
+      manager.setSyncKey(validKey);
+
+      await db.audios.add({
+        id: 'aud-unsynced-1',
+        articleId: 'art-1',
+        blob: new Blob(['audio-content'], { type: 'audio/mpeg' }),
+        mimeType: 'audio/mpeg',
+        fileName: 'test.mp3',
+        fileSize: 13,
+        duration: 1,
+        sourceType: 'tts',
+        createdAt: 1000,
+        synced: false,
+      });
+
+      const mockFetch = vi.fn()
+        // 1. GET /api/sync/manifest
+        .mockResolvedValueOnce(new Response(JSON.stringify({ exists: false, updatedAt: 0 }), { status: 200 }))
+        // 2. POST /api/sync/push
+        .mockResolvedValueOnce(new Response(JSON.stringify({ success: true, updatedAt: 5000 }), { status: 200 }))
+        // 3. PUT /api/sync/audio/aud-unsynced-1
+        .mockResolvedValueOnce(new Response(JSON.stringify({ success: true }), { status: 200 }));
+      globalThis.fetch = mockFetch;
+
+      const result = await manager.syncNow();
+      expect(result.success).toBe(true);
+
+      // Verify PUT call
+      const putCall = mockFetch.mock.calls.find(
+        (call) => typeof call[0] === 'string' && call[0].includes('/api/sync/audio/aud-unsynced-1')
+      );
+      expect(putCall).toBeDefined();
+      expect(putCall?.[1]?.method).toBe('PUT');
+      expect(putCall?.[1]?.headers?.['x-sync-key']).toBe(validKey);
+
+      // Verify marked as synced in IndexedDB
+      const updatedAudio = await db.audios.get('aud-unsynced-1');
+      expect(updatedAudio?.synced).toBe(true);
+    });
+
+    it('skips uploading already synced audios', async () => {
+      manager.setSyncKey(validKey);
+
+      await db.audios.add({
+        id: 'aud-synced-already',
+        articleId: 'art-1',
+        blob: new Blob(['audio-content'], { type: 'audio/mpeg' }),
+        mimeType: 'audio/mpeg',
+        fileName: 'test.mp3',
+        fileSize: 13,
+        duration: 1,
+        sourceType: 'tts',
+        createdAt: 1000,
+        synced: true,
+      });
+
+      const mockFetch = vi.fn()
+        // 1. GET /api/sync/manifest
+        .mockResolvedValueOnce(new Response(JSON.stringify({ exists: false, updatedAt: 0 }), { status: 200 }))
+        // 2. POST /api/sync/push
+        .mockResolvedValueOnce(new Response(JSON.stringify({ success: true, updatedAt: 5000 }), { status: 200 }));
+      globalThis.fetch = mockFetch;
+
+      const result = await manager.syncNow();
+      expect(result.success).toBe(true);
+
+      const putCalls = mockFetch.mock.calls.filter(
+        (call) => typeof call[0] === 'string' && call[0].includes('/api/sync/audio/')
+      );
+      expect(putCalls).toHaveLength(0);
+    });
   });
 
   describe('Debounced sync scheduling', () => {

@@ -32,6 +32,7 @@ export interface AudioRecord {
   duration: number;
   sourceType: 'tts' | 'upload';
   createdAt: number;
+  synced?: boolean | undefined;
 }
 
 export interface DrillLogRecord {
@@ -84,6 +85,18 @@ export class TalkDrillDatabase extends Dexie {
       this.audios.toArray(),
     ]);
 
+    const audioMap = new Map<string, string>();
+    audios.forEach((a) => audioMap.set(a.articleId, a.id));
+
+    await Promise.all(
+      articles.map(async (art) => {
+        if (!art.audioId && audioMap.has(art.id)) {
+          art.audioId = audioMap.get(art.id);
+          await this.articles.update(art.id, { audioId: art.audioId });
+        }
+      })
+    );
+
     const audioMetas = audios.map((a) => ({
       id: a.id,
       articleId: a.articleId,
@@ -122,7 +135,18 @@ export class TalkDrillDatabase extends Dexie {
   async applyMergedSnapshot(snapshot: import('../services/syncMerger').SyncSnapshot): Promise<void> {
     const tables = [this.articles, this.drillLogs, this.settings, this.wordLookups];
     await this.transaction('rw', tables, async () => {
-      if (snapshot.articles?.length) await this.articles.bulkPut(snapshot.articles);
+      if (snapshot.articles?.length) {
+        if (snapshot.audioMetas?.length) {
+          const metaMap = new Map<string, string>();
+          snapshot.audioMetas.forEach((m) => metaMap.set(m.articleId, m.id));
+          snapshot.articles.forEach((art) => {
+            if (!art.audioId && metaMap.has(art.id)) {
+              art.audioId = metaMap.get(art.id);
+            }
+          });
+        }
+        await this.articles.bulkPut(snapshot.articles);
+      }
       if (snapshot.settings?.length) await this.settings.bulkPut(snapshot.settings);
       if (snapshot.wordLookups?.length) {
         await this.wordLookups.bulkPut(snapshot.wordLookups as WordLookupRecord[]);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { ArrowLeft, Printer, Eye, EyeOff, Award, SlidersHorizontal, Edit3, Archive, ArchiveRestore, Keyboard } from 'lucide-react';
+import { ArrowLeft, Printer, Eye, EyeOff, Award, SlidersHorizontal, Edit3, Archive, ArchiveRestore, Keyboard, Loader2 } from 'lucide-react';
 import { corpusService } from '../services/corpusService';
 import { drillCounterService } from '../services/drillCounterService';
 import { audioService } from '../services/audioService';
@@ -303,25 +303,38 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
   }, [resetLoopState]);
 
   const renderAudioPlayerBar = () => {
-    if (!audioUrl) return null;
-    return (
-      <AudioPlayerBar
-        audioUrl={audioUrl}
-        isPlaying={isPlaying}
-        playbackRate={playbackRate}
-        currentTime={currentTime}
-        duration={duration}
-        isLooping={isLooping}
-        loopStart={loopStart}
-        loopEnd={loopEnd}
-        onPlayPause={handlePlayPause}
-        onSeek={handleSeek}
-        onRateChange={handleRateChange}
-        onJump={handleJump}
-        onSetLoopPoint={handleSetLoopPoint}
-        onClearLoop={handleClearLoop}
-      />
-    );
+    if (audioUrl) {
+      return (
+        <AudioPlayerBar
+          audioUrl={audioUrl}
+          isPlaying={isPlaying}
+          playbackRate={playbackRate}
+          currentTime={currentTime}
+          duration={duration}
+          isLooping={isLooping}
+          loopStart={loopStart}
+          loopEnd={loopEnd}
+          onPlayPause={handlePlayPause}
+          onSeek={handleSeek}
+          onRateChange={handleRateChange}
+          onJump={handleJump}
+          onSetLoopPoint={handleSetLoopPoint}
+          onClearLoop={handleClearLoop}
+        />
+      );
+    }
+    if (article?.audioId) {
+      return (
+        <div
+          data-testid="audio-loading-indicator"
+          className="flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-slate-100/80 dark:bg-slate-800/80 text-xs text-slate-500 font-mono animate-pulse"
+        >
+          <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+          <span>Loading audio from cloud...</span>
+        </div>
+      );
+    }
+    return null;
   };
 
   const alignedParagraphs = useMemo(() => {

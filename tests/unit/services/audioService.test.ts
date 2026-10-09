@@ -276,6 +276,43 @@ describe('AudioService (TDD)', () => {
     // Should now be cached in local IndexedDB
     const cached = await db.audios.get('aud-cloud-123');
     expect(cached).toBeDefined();
+    expect(cached?.synced).toBe(true);
+  });
+
+  it('uploadAudioToCloud uploads audio binary with correct headers and returns true', async () => {
+    const { syncManager } = await import('../../../src/services/syncManager');
+    syncManager.setSyncKey('TD-9X7K-M2P4-W8N3-7B5D');
+
+    const mockFetch = vi.fn().mockResolvedValue({ ok: true });
+    globalThis.fetch = mockFetch;
+
+    const fakeBlob = new Blob(['cloud-data'], { type: 'audio/mpeg' });
+    const success = await service.uploadAudioToCloud('aud-upl-1', fakeBlob, 'audio/mpeg');
+    expect(success).toBe(true);
+
+    expect(mockFetch).toHaveBeenCalledWith('/api/sync/audio/aud-upl-1', expect.objectContaining({
+      method: 'PUT',
+      headers: {
+        'x-sync-key': 'TD-9X7K-M2P4-W8N3-7B5D',
+        'Content-Type': 'audio/mpeg',
+      },
+      body: fakeBlob,
+    }));
+  });
+
+  it('uploadAudioToCloud returns false when no sync key or network error', async () => {
+    const { syncManager } = await import('../../../src/services/syncManager');
+    syncManager.clearSyncKey();
+
+    const fakeBlob = new Blob(['cloud-data'], { type: 'audio/mpeg' });
+    const resNoKey = await service.uploadAudioToCloud('aud-upl-2', fakeBlob);
+    expect(resNoKey).toBe(false);
+
+    syncManager.setSyncKey('TD-9X7K-M2P4-W8N3-7B5D');
+    globalThis.fetch = vi.fn().mockRejectedValue(new Error('Network failure'));
+    const resNetErr = await service.uploadAudioToCloud('aud-upl-2', fakeBlob);
+    expect(resNetErr).toBe(false);
   });
 });
+
 

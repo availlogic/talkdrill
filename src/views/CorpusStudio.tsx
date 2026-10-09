@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Sparkles, Upload, Volume2, Play, Check } from 'lucide-react';
+import { ArrowLeft, Sparkles, Upload, Volume2, Play, Check, Loader2 } from 'lucide-react';
 import { corpusService } from '../services/corpusService';
 import { translationService } from '../services/translationService';
 import { audioService } from '../services/audioService';
@@ -23,11 +23,13 @@ export const CorpusStudio: React.FC<CorpusStudioProps> = ({ onCancel, onStartDri
   const [translating, setTranslating] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioChanged, setAudioChanged] = useState(false);
+  const [isAudioLoading, setIsAudioLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!editArticleId) return;
     let unmounted = false;
+    setIsAudioLoading(true);
     corpusService.getArticle(editArticleId).then((art) => {
       if (!unmounted && art) {
         setTitle(art.title);
@@ -41,8 +43,9 @@ export const CorpusStudio: React.FC<CorpusStudioProps> = ({ onCancel, onStartDri
     });
 
     audioService.getAudioByArticleId(editArticleId).then((item) => {
-      if (!unmounted && item) {
-        setAudioBlob(item.blob);
+      if (!unmounted) {
+        if (item) setAudioBlob(item.blob);
+        setIsAudioLoading(false);
       }
     });
 
@@ -348,7 +351,14 @@ export const CorpusStudio: React.FC<CorpusStudioProps> = ({ onCancel, onStartDri
             <input type="file" accept="audio/*" onChange={handleAudioUpload} className="hidden" />
           </label>
 
-          {audioBlob && (
+          {isAudioLoading && (
+            <div className="flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 font-semibold animate-pulse">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <span>Loading audio from cloud...</span>
+            </div>
+          )}
+
+          {!isAudioLoading && audioBlob && (
             <div className="flex items-center gap-2">
               <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
                 <Check className="w-3.5 h-3.5" />

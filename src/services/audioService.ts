@@ -34,6 +34,7 @@ export interface IAudioService {
   deleteAudio(id: string): Promise<void>;
   deleteAudioByArticleId(articleId: string): Promise<void>;
   exportAudioFile(audioItem: AudioItem): void;
+  uploadAudioToCloud(audioId: string, blob: Blob, mimeType?: string): Promise<boolean>;
 }
 
 const MAX_AUDIO_BYTES = 50 * 1024 * 1024; // 50MB
@@ -198,6 +199,28 @@ export class AudioService implements IAudioService {
     return mapRecordToAudioItem(record);
   }
 
+  async uploadAudioToCloud(
+    audioId: string,
+    blob: Blob,
+    mimeType?: string
+  ): Promise<boolean> {
+    const syncKey = syncManager.getSyncKey();
+    if (!syncKey) return false;
+    try {
+      const res = await fetch(`/api/sync/audio/${audioId}`, {
+        method: 'PUT',
+        headers: {
+          'x-sync-key': syncKey,
+          'Content-Type': mimeType || blob.type || 'audio/mpeg',
+        },
+        body: blob,
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
+
   private async fetchAndCacheCloudAudio(
     articleId: string,
     audioId: string
@@ -220,6 +243,7 @@ export class AudioService implements IAudioService {
         duration: 0,
         sourceType: 'tts',
         createdAt: Date.now(),
+        synced: true,
       };
       await db.audios.add(record);
       return record;

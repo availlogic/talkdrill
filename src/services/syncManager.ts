@@ -105,6 +105,38 @@ export class SyncManager {
     if (!res.ok) throw new Error(`Failed to push snapshot: ${res.status}`);
   }
 
+  private async uploadSingleAudio(
+    key: string,
+    audioId: string,
+    blob: Blob,
+    mimeType: string
+  ): Promise<boolean> {
+    try {
+      const res = await fetch(`/api/sync/audio/${audioId}`, {
+        method: 'PUT',
+        headers: {
+          'x-sync-key': key,
+          'Content-Type': mimeType || blob.type || 'audio/mpeg',
+        },
+        body: blob,
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  private async syncPendingAudios(key: string): Promise<void> {
+    const localAudios = await db.audios.toArray();
+    const pending = localAudios.filter((a) => !a.synced && a.blob);
+    for (const audio of pending) {
+      const ok = await this.uploadSingleAudio(key, audio.id, audio.blob, audio.mimeType);
+      if (ok) {
+        await db.audios.update(audio.id, { synced: true });
+      }
+    }
+  }
+
   private async executeSync(key: string): Promise<void> {
     const manifest = await this.fetchManifest(key);
     const local = await db.exportSnapshot();
@@ -118,6 +150,7 @@ export class SyncManager {
     }
 
     await this.pushSnapshot(key, targetSnapshot);
+    await this.syncPendingAudios(key);
   }
 
   async syncNow(): Promise<SyncResult> {
