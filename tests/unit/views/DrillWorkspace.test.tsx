@@ -218,6 +218,43 @@ describe('DrillWorkspace View (TDD)', () => {
     expect(screen.getByRole('button', { name: /focus mode/i })).toBeDefined();
   });
 
+  it('displays repetition count button and allows opening numeric override modal in Zen mode', async () => {
+    render(<DrillWorkspace articleId={articleId} onBack={vi.fn()} />);
+
+    const zenBtn = await screen.findByRole('button', { name: /focus mode/i });
+    fireEvent.click(zenBtn);
+
+    // In Zen mode, verify Adjust Repetition Count button is rendered and displays initial 0 reps
+    const countBtnZen = screen.getByRole('button', { name: /adjust repetition count/i });
+    expect(countBtnZen).toBeDefined();
+    expect(countBtnZen.textContent).toContain('0 reps');
+
+    // Press Space to increment in Zen mode
+    fireEvent.keyDown(window, { code: 'Space' });
+    expect(countBtnZen.textContent).toContain('1 reps');
+
+    // Click override button in Zen mode
+    fireEvent.click(countBtnZen);
+
+    const dialog = screen.getByRole('dialog', { name: /adjust repetition count/i });
+    expect(dialog).toBeDefined();
+
+    // Adjust count to 24 using input form
+    const input = screen.getByRole('spinbutton');
+    fireEvent.change(input, { target: { value: '24' } });
+    fireEvent.submit(input.closest('form')!);
+
+    // Verify modal is closed and Zen mode count button reflects updated reps
+    expect(screen.queryByRole('dialog', { name: /adjust repetition count/i })).toBeNull();
+    expect(countBtnZen.textContent).toContain('24 reps');
+
+    // Exit Zen mode and check normal header count
+    const exitBtn = screen.getByRole('button', { name: /exit focus/i });
+    fireEvent.click(exitBtn);
+    const normalCountBtn = screen.getByRole('button', { name: /adjust repetition count/i });
+    expect(normalCountBtn.textContent).toContain('24 reps');
+  });
+
   it('triggers replay with KeyP shortcut and ignores browser shortcuts with modifiers', async () => {
     const backSpy = vi.fn();
     render(<DrillWorkspace articleId={articleId} onBack={backSpy} />);

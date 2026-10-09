@@ -464,14 +464,24 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
         </header>
       )}
 
-      {/* Zen Mode Exit Button */}
+      {/* Zen Mode Floating Controls */}
       {isZenMode && (
-        <div className="absolute top-4 right-4 z-30">
+        <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsOverrideModalOpen(true)}
+            aria-label="Adjust Repetition Count"
+            className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-800/80 hover:bg-slate-800 text-blue-400 border border-slate-700/60 flex items-center gap-1.5 font-mono shadow-xs backdrop-blur-sm transition-colors"
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+            <span>{currentCount} reps</span>
+          </button>
+
           <button
             type="button"
             onClick={() => setIsZenMode(false)}
             aria-label="Exit Focus"
-            className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-300 flex items-center gap-1.5"
+            className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-300 border border-slate-700/60 flex items-center gap-1.5 backdrop-blur-sm"
           >
             <EyeOff className="w-3.5 h-3.5" />
             <span>Exit Focus</span>

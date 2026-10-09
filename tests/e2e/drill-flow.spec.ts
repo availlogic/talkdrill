@@ -68,11 +68,25 @@ test.describe('TalkDrill E2E Journeys', () => {
     await page.getByRole('button', { name: 'Close' }).click();
     await expect(page.getByText('Print Worksheet & Tally Sheet Export')).not.toBeVisible();
 
-    // 8. Zen Mode Toggle
+    // 8. Zen Mode Toggle and in-focus repetition counter & override
     await page.getByRole('button', { name: 'Focus Mode' }).click();
     await expect(page.getByRole('button', { name: 'Exit Focus' })).toBeVisible();
+    const zenOverrideBtn = page.getByRole('button', { name: 'Adjust Repetition Count' });
+    await expect(zenOverrideBtn).toBeVisible();
+    await expect(zenOverrideBtn).toContainText('5 reps');
+
+    // Click override button inside Zen Mode to adjust count to 24
+    await zenOverrideBtn.click();
+    await expect(page.getByRole('dialog', { name: 'Adjust Repetition Count' })).toBeVisible();
+    await page.locator('input[type="number"]').fill('24');
+    await page.getByRole('button', { name: 'Save Changes' }).click();
+    await expect(page.getByRole('dialog', { name: 'Adjust Repetition Count' })).not.toBeVisible();
+    await expect(zenOverrideBtn).toContainText('24 reps');
+
+    // Exit Zen Mode and verify normal header reflects 24 reps
     await page.getByRole('button', { name: 'Exit Focus' }).click();
     await expect(page.getByRole('button', { name: 'Focus Mode' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Adjust Repetition Count' })).toContainText('24 reps');
   });
 
   test('E2E-SCN-002: Kenji Mobile Journey - Responsive Touch Capsule & Override', async ({ page }) => {
