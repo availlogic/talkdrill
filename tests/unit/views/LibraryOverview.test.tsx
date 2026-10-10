@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { LibraryOverview } from '../../../src/views/LibraryOverview';
 import { db } from '../../../src/storage/db';
 import { corpusService } from '../../../src/services/corpusService';
+import { syncManager } from '../../../src/services/syncManager';
 
 describe('LibraryOverview View (TDD)', () => {
   beforeEach(async () => {
@@ -211,5 +212,45 @@ describe('LibraryOverview View (TDD)', () => {
     fireEvent.click(editBtn);
 
     expect(editSpy).toHaveBeenCalledWith(art.id);
+  });
+
+  it('automatically refreshes articles list when syncManager triggers a sync update', async () => {
+    const art = await corpusService.createArticle({
+      title: 'Sync Reactivity Article',
+      sourceText: '',
+      targetText: 'Texto reactivo',
+      sourceLang: 'es-ES',
+      targetLang: 'es-ES',
+      mode: 'direct_foreign',
+      targetCount: 500,
+    });
+
+    render(
+      <LibraryOverview
+        onSelectArticle={vi.fn()}
+        onNewArticle={vi.fn()}
+        onOpenSettings={vi.fn()}
+      />
+    );
+
+    expect(await screen.findByText('0 / 500 reps')).toBeDefined();
+
+    // Simulate background sync updating local IndexedDB
+    await db.articles.update(art.id, { currentCount: 353 });
+
+    // Trigger syncManager listener notification simulating sync completed
+    await act(async () => {
+      // Simulate sync finish notification
+      const listeners = (syncManager as unknown as { listeners: Set<(state: unknown) => void> }).listeners;
+      if (listeners) {
+        listeners.forEach((fn) =>
+          fn({ status: 'idle', lastSyncedAt: Date.now(), errorMessage: null })
+        );
+      }
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('353 / 500 reps')).toBeDefined();
+    });
   });
 });

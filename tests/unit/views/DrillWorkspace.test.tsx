@@ -6,6 +6,7 @@ import { corpusService } from '../../../src/services/corpusService';
 import { playerEngine } from '../../../src/services/playerEngine';
 import { DictionaryService } from '../../../src/services/dictionaryService';
 import { DEFAULT_SETTINGS } from '../../../src/services/settingsService';
+import { syncManager } from '../../../src/services/syncManager';
 
 describe('DrillWorkspace View (TDD)', () => {
   let articleId: string;
@@ -642,6 +643,25 @@ describe('DrillWorkspace View (TDD)', () => {
     // Close via close button in modal
     fireEvent.click(screen.getByRole('button', { name: /close shortcuts/i }));
     expect(screen.queryByRole('dialog', { name: /keyboard shortcuts/i })).toBeNull();
+  });
+
+  it('automatically updates currentCount when syncManager triggers a sync update', async () => {
+    render(<DrillWorkspace articleId={articleId} onBack={vi.fn()} />);
+    await screen.findByText('¿Nos cobras, por favor?');
+    expect(screen.getByText('0 reps')).toBeDefined();
+
+    // Simulate remote sync updated article to 353
+    await db.articles.update(articleId, { currentCount: 353 });
+
+    // Trigger syncManager listener
+    const listeners = (syncManager as unknown as { listeners: Set<(state: unknown) => void> }).listeners;
+    if (listeners) {
+      listeners.forEach((fn) =>
+        fn({ status: 'idle', lastSyncedAt: Date.now(), errorMessage: null })
+      );
+    }
+
+    expect(await screen.findByText('353 reps')).toBeDefined();
   });
 });
 

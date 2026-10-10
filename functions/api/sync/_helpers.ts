@@ -43,6 +43,7 @@ export function createCorsResponse(): Response {
 export function jsonResponse(data: unknown, status = 200): Response {
   const headers = new Headers(SYNC_CORS_HEADERS);
   headers.set('Content-Type', 'application/json');
+  headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
   return new Response(JSON.stringify(data), { status, headers });
 }
 

@@ -80,6 +80,7 @@ export class SyncManager {
   private async fetchManifest(key: string): Promise<{ exists: boolean; updatedAt: number }> {
     const res = await fetch('/api/sync/manifest', {
       headers: { 'x-sync-key': key },
+      cache: 'no-store',
     });
     if (!res.ok) throw new Error(`Failed to check manifest: ${res.status}`);
     return res.json();
@@ -88,6 +89,7 @@ export class SyncManager {
   private async pullSnapshot(key: string): Promise<SyncSnapshot> {
     const res = await fetch('/api/sync/pull', {
       headers: { 'x-sync-key': key },
+      cache: 'no-store',
     });
     if (!res.ok) throw new Error(`Failed to pull snapshot: ${res.status}`);
     return res.json();

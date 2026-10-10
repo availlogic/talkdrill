@@ -100,9 +100,73 @@ describe('SyncManager (TDD)', () => {
       const result = await manager.syncNow();
       expect(result.success).toBe(true);
 
+      expect(mockFetch).toHaveBeenCalledWith('/api/sync/manifest', expect.objectContaining({ cache: 'no-store' }));
+      expect(mockFetch).toHaveBeenCalledWith('/api/sync/pull', expect.objectContaining({ cache: 'no-store' }));
+
       const localArticles = await db.articles.toArray();
       expect(localArticles).toHaveLength(1);
       expect(localArticles[0].id).toBe('art-remote');
+    });
+
+    it('merges remote newer counts (e.g. 353) into local older counts (e.g. 311) without regression', async () => {
+      manager.setSyncKey(validKey);
+
+      await db.articles.add({
+        id: 'art-drill-1',
+        title: 'Shadowing 1',
+        sourceText: '',
+        targetText: 'Hello world',
+        sourceLang: 'en',
+        targetLang: 'en',
+        mode: 'direct_foreign',
+        targetCount: 500,
+        currentCount: 311,
+        createdAt: 1000,
+        updatedAt: 1000,
+        isArchived: 0,
+      });
+
+      const remoteSnapshot = {
+        schemaVersion: 1,
+        exportedAt: 2000,
+        articles: [{
+          id: 'art-drill-1',
+          title: 'Shadowing 1',
+          sourceText: '',
+          targetText: 'Hello world',
+          sourceLang: 'en',
+          targetLang: 'en',
+          mode: 'direct_foreign' as const,
+          targetCount: 500,
+          currentCount: 353,
+          createdAt: 1000,
+          updatedAt: 2000,
+          isArchived: 0,
+        }],
+        drillLogs: [
+          { articleId: 'art-drill-1', delta: 1, resultingCount: 353, timestamp: 2000 },
+        ],
+        settings: [],
+      };
+
+      const mockFetch = vi.fn()
+        .mockResolvedValueOnce(new Response(JSON.stringify({ exists: true, updatedAt: 2000 }), { status: 200 }))
+        .mockResolvedValueOnce(new Response(JSON.stringify(remoteSnapshot), { status: 200 }))
+        .mockResolvedValueOnce(new Response(JSON.stringify({ success: true, updatedAt: 2000 }), { status: 200 }));
+      globalThis.fetch = mockFetch;
+
+      const result = await manager.syncNow();
+      expect(result.success).toBe(true);
+
+      const localArt = await db.articles.get('art-drill-1');
+      expect(localArt?.currentCount).toBe(353);
+
+      // Verify that if pushed, payload contains 353, never 311
+      const pushCall = mockFetch.mock.calls.find((call) => call[0] === '/api/sync/push');
+      if (pushCall) {
+        const payload = JSON.parse(pushCall[1].body);
+        expect(payload.articles[0].currentCount).toBe(353);
+      }
     });
 
     it('sets error status when sync fails due to network or server error', async () => {

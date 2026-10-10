@@ -95,6 +95,7 @@ describe('Cloudflare Sync Pages Functions (TDD)', () => {
 
       const res = await onManifestGet({ request: req, env: { TALKDRILL_BUCKET: mockBucket } } as never);
       expect(res.status).toBe(200);
+      expect(res.headers.get('Cache-Control')).toBe('no-store, no-cache, must-revalidate');
       const data = await res.json();
       expect(data).toEqual(manifest);
     });
@@ -123,6 +124,7 @@ describe('Cloudflare Sync Pages Functions (TDD)', () => {
 
       const res = await onPullGet({ request: req, env: { TALKDRILL_BUCKET: mockBucket } } as never);
       expect(res.status).toBe(200);
+      expect(res.headers.get('Cache-Control')).toBe('no-store, no-cache, must-revalidate');
       const data = await res.json();
       expect(data).toEqual(snapshot);
     });

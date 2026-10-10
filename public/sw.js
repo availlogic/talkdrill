@@ -1,4 +1,4 @@
-const CACHE_NAME = 'talkdrill-v1';
+const CACHE_NAME = 'talkdrill-v2';
 const CORE_ASSETS = ['/', '/index.html', '/manifest.json', '/icon.svg'];
 
 self.addEventListener('install', (event) => {
@@ -25,6 +25,9 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+
+  // Never intercept or cache dynamic API requests (such as Cloudflare sync or proxy)
+  if (url.pathname.startsWith('/api/')) return;
 
   event.respondWith(
     caches.match(request).then((cachedResponse) => {

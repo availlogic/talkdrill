@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Plus, Settings, Trash2, HardDrive, Sparkles, Edit3, Archive, ArchiveRestore } from 'lucide-react';
 import { corpusService } from '../services/corpusService';
+import { syncManager } from '../services/syncManager';
 import { checkStorageCapacity } from '../utils/storageQuota';
 import { type Article } from '../types/models';
 import { AppLogo } from '../components/AppLogo';
@@ -88,6 +89,18 @@ export const LibraryOverview: React.FC<LibraryOverviewProps> = ({
 
   useEffect(() => {
     loadData();
+
+    let prevSyncedAt = syncManager.getState().lastSyncedAt;
+    const unsubscribe = syncManager.subscribe((state) => {
+      if (state.lastSyncedAt !== prevSyncedAt) {
+        prevSyncedAt = state.lastSyncedAt;
+        loadData();
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, [showArchived]);
 
   const handleToggleArchive = async (e: React.MouseEvent, art: Article) => {

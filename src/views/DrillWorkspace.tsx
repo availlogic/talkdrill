@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { ArrowLeft, Printer, Eye, EyeOff, Award, SlidersHorizontal, Edit3, Archive, ArchiveRestore, Keyboard, Loader2 } from 'lucide-react';
 import { corpusService } from '../services/corpusService';
 import { drillCounterService } from '../services/drillCounterService';
+import { syncManager } from '../services/syncManager';
 import { audioService } from '../services/audioService';
 import { playerEngine } from '../services/playerEngine';
 import { alignBilingualParagraphs, type AlignedParagraph } from '../utils/textAlignment';
@@ -144,10 +145,26 @@ export const DrillWorkspace: React.FC<DrillWorkspaceProps> = ({ articleId, onBac
       }
     });
 
+    let prevSyncedAt = syncManager.getState().lastSyncedAt;
+    const unsubSync = syncManager.subscribe((state) => {
+      if (!unmounted && state.lastSyncedAt !== prevSyncedAt) {
+        prevSyncedAt = state.lastSyncedAt;
+        corpusService.getArticle(articleId).then((art) => {
+          if (!unmounted && art) {
+            setArticle(art);
+            drillCounterService.loadArticle(art.id).then((c) => {
+              if (!unmounted) setCurrentCount(c);
+            });
+          }
+        });
+      }
+    });
+
     return () => {
       unmounted = true;
       unsubPlayer();
       unsubMilestone();
+      unsubSync();
       drillCounterService.flushPendingSaves();
       playerEngine.destroy();
     };
