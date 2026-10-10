@@ -1,6 +1,7 @@
 import { db } from '../storage/db';
 import { type AppSettings } from '../types/models';
 import { DEFAULT_PROMPTS } from './translationService';
+import { syncManager } from './syncManager';
 
 export const DEFAULT_SETTINGS: AppSettings = {
   theme: 'system',
@@ -68,11 +69,13 @@ export class SettingsService {
       updatedAt: Date.now(),
     });
 
+    syncManager.scheduleSync();
     return updated;
   }
 
   async resetSettings(): Promise<AppSettings> {
     await db.settings.delete(SETTINGS_KEY);
+    syncManager.scheduleSync();
     return { ...DEFAULT_SETTINGS };
   }
 

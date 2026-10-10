@@ -1,11 +1,13 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { db } from '../../../src/storage/db';
 import { SettingsService } from '../../../src/services/settingsService';
+import { syncManager } from '../../../src/services/syncManager';
 
 describe('SettingsService (TDD)', () => {
   let service: SettingsService;
 
   beforeEach(async () => {
+    vi.restoreAllMocks();
     await db.settings.clear();
     await db.articles.clear();
     await db.audios.clear();
@@ -86,6 +88,18 @@ describe('SettingsService (TDD)', () => {
     expect(res.translation.apiKey).toBe('');
   });
 
+  it('triggers syncManager.scheduleSync when updateSettings is called', async () => {
+    const scheduleSyncSpy = vi.spyOn(syncManager, 'scheduleSync');
+    await service.updateSettings({ theme: 'dark' });
+    expect(scheduleSyncSpy).toHaveBeenCalled();
+  });
+
+  it('triggers syncManager.scheduleSync when resetSettings is called', async () => {
+    const scheduleSyncSpy = vi.spyOn(syncManager, 'scheduleSync');
+    await service.resetSettings();
+    expect(scheduleSyncSpy).toHaveBeenCalled();
+  });
+
   it('clears all local data atomically', async () => {
     await db.articles.add({
       id: 'art-to-clear',
@@ -108,3 +122,4 @@ describe('SettingsService (TDD)', () => {
     expect(await db.drillLogs.count()).toBe(0);
   });
 });
+
